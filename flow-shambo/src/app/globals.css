@@ -1,0 +1,337 @@
+@import "tailwindcss";
+
+/* 
+ * FlowShambo Global Styles
+ * 
+ * Flow Brand Colors:
+ * - Primary (Flow Green): #00EF8B
+ * - Background: #0a0a0a (dark)
+ * - Surface: #1a1a1a (cards, panels)
+ * - Text Primary: #ffffff
+ * - Text Secondary: #888888
+ * - Error: #ff6b6b
+ * - Success: #00EF8B (same as primary)
+ * 
+ * Design Principles:
+ * - No gradients - solid colors only
+ * - Clean, minimal design
+ * - High contrast for accessibility
+ * 
+ * Requirements: 7.1, 7.2
+ */
+
+:root {
+  /* Flow Brand Colors */
+  --flow-green: #00EF8B;
+  --flow-green-hover: #00D67D;
+  --flow-green-light: rgba(0, 239, 139, 0.1);
+  --flow-green-medium: rgba(0, 239, 139, 0.2);
+  
+  /* Background Colors */
+  --background: #0a0a0a;
+  --background-surface: #1a1a1a;
+  --background-elevated: #242424;
+  
+  /* Text Colors */
+  --foreground: #ffffff;
+  --foreground-secondary: #888888;
+  --foreground-muted: #666666;
+  
+  /* Status Colors */
+  --color-error: #ff6b6b;
+  --color-error-light: rgba(255, 107, 107, 0.1);
+  --color-warning: #FFC107;
+  --color-warning-light: rgba(255, 193, 7, 0.1);
+  --color-info: #00BFFF;
+  --color-info-light: rgba(0, 191, 255, 0.1);
+  --color-success: var(--flow-green);
+  --color-success-light: var(--flow-green-light);
+  
+  /* Border Colors */
+  --border-default: #333333;
+  --border-hover: var(--flow-green);
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+  
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  
+  /* Shadows (subtle, no gradients) */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px rgba(0, 239, 139, 0.3);
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
+  
+  /* Z-Index Scale */
+  --z-dropdown: 100;
+  --z-modal: 1000;
+  --z-overlay: 9999;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--flow-green);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--foreground);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 2.5rem;
+}
+
+h2 {
+  font-size: 1.75rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+/* Links */
+a {
+  color: var(--flow-green);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--flow-green-hover);
+}
+
+/* Focus States (Accessibility) */
+:focus-visible {
+  outline: 2px solid var(--flow-green);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--flow-green);
+  color: #000000;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground-muted);
+}
+
+/* Button Base Styles */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Input Base Styles */
+input, textarea, select {
+  font-family: inherit;
+  background: var(--background);
+  color: var(--foreground);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  transition: border-color var(--transition-fast);
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--flow-green);
+  outline: none;
+}
+
+input::placeholder {
+  color: var(--foreground-muted);
+}
+
+/* Utility Classes */
+.flow-green {
+  color: var(--flow-green);
+}
+
+.bg-flow-green {
+  background-color: var(--flow-green);
+}
+
+.border-flow-green {
+  border-color: var(--flow-green);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+.text-muted {
+  color: var(--foreground-secondary);
+}
+
+/* Card/Panel Base */
+.panel {
+  background: var(--background-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+}
+
+/* Primary Button */
+.btn-primary {
+  background-color: var(--flow-green);
+  color: #000000;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--flow-green-hover);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background-color: transparent;
+  color: var(--flow-green);
+  border: 2px solid var(--flow-green);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--flow-green-light);
+}
+
+/* Animations */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animation Utilities */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--transition-normal);
+}
+
+.animate-slide-up {
+  animation: slideUp var(--transition-slow);
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--transition-normal);
+}
