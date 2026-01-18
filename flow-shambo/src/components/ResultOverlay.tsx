@@ -65,6 +65,12 @@ export interface ResultOverlayProps {
   className?: string;
   /** Whether to show the overlay (for animation control) */
   isVisible?: boolean;
+  /** Bet transaction ID */
+  betTxId?: string | null;
+  /** Reveal transaction ID */
+  revealTxId?: string | null;
+  /** Settlement transaction ID */
+  settleTxId?: string | null;
 }
 
 /**
@@ -122,7 +128,7 @@ export function formatPayout(amount: number): string {
  */
 function generateConfetti(): ConfettiParticle[] {
   const particles: ConfettiParticle[] = [];
-  
+
   for (let i = 0; i < CONFETTI_COUNT; i++) {
     particles.push({
       id: i,
@@ -137,24 +143,12 @@ function generateConfetti(): ConfettiParticle[] {
       opacity: 1,
     });
   }
-  
+
   return particles;
 }
 
 /**
  * ResultOverlay component displays the game result with animations
- *
- * @example
- * ```tsx
- * <ResultOverlay
- *   winner="rock"
- *   playerWon={true}
- *   payout={2.5}
- *   onPlayAgain={() => resetGame()}
- * />
- * ```
- *
- * **Validates: Requirements 6.5, 7.6, 7.7**
  */
 export function ResultOverlay({
   winner,
@@ -163,12 +157,17 @@ export function ResultOverlay({
   onPlayAgain,
   className = '',
   isVisible = true,
+  betTxId,
+  revealTxId,
+  settleTxId,
 }: ResultOverlayProps) {
   const [confetti, setConfetti] = useState<ConfettiParticle[]>([]);
   const [isShaking, setIsShaking] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
+
+  const getExplorerLink = (txId: string) => `https://testnet.flowscan.io/tx/${txId}`;
 
   /**
    * Initialize animations based on win/lose state
@@ -195,7 +194,7 @@ export function ResultOverlay({
       const shakeTimer = setTimeout(() => {
         setIsShaking(false);
       }, SHAKE_DURATION);
-      
+
       return () => {
         clearTimeout(shakeTimer);
         clearTimeout(contentTimer);
@@ -214,8 +213,8 @@ export function ResultOverlay({
     if (confetti.length === 0) return;
 
     const animate = (currentTime: number) => {
-      const deltaTime = lastTimeRef.current === 0 
-        ? 16 
+      const deltaTime = lastTimeRef.current === 0
+        ? 16
         : currentTime - lastTimeRef.current;
       lastTimeRef.current = currentTime;
 
@@ -419,6 +418,26 @@ export function ResultOverlay({
             {playerWon ? '+' : ''}{formatPayout(payout)} FLOW
           </span>
         </div>
+
+        {/* Transaction Links */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px', fontSize: '14px' }}>
+          {betTxId && (
+            <a href={getExplorerLink(betTxId)} target="_blank" rel="noopener noreferrer" style={{ color: '#888', textDecoration: 'none', borderBottom: '1px dotted #888' }}>
+              View Bet Transaction
+            </a>
+          )}
+          {revealTxId && (
+            <a href={getExplorerLink(revealTxId)} target="_blank" rel="noopener noreferrer" style={{ color: '#888', textDecoration: 'none', borderBottom: '1px dotted #888' }}>
+              View Reveal (Randomness)
+            </a>
+          )}
+          {settleTxId && (
+            <a href={getExplorerLink(settleTxId)} target="_blank" rel="noopener noreferrer" style={{ color: '#888', textDecoration: 'none', borderBottom: '1px dotted #888' }}>
+              View Payout Transaction
+            </a>
+          )}
+        </div>
+
 
         {/* Play Again button */}
         <button

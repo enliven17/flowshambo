@@ -41,6 +41,9 @@ export interface GameStore {
   setObjects: (objects: GameObject[]) => void;
   updateObject: (id: string, updates: Partial<GameObject>) => void;
   setWinner: (winner: ObjectType, playerWon: boolean) => void;
+  setBetTransactionId: (id: string) => void;
+  setRevealTransactionId: (id: string) => void;
+  setSettleTransactionId: (id: string) => void;
   resetGame: () => void;
 
   // UI state actions
@@ -54,6 +57,8 @@ export interface GameStore {
   startSimulation: (objects: GameObject[]) => void;
   settleGame: (winner: ObjectType, playerWon: boolean) => void;
 }
+// ... (initial states) ...
+// (inside useGameStore.create)
 
 /**
  * Initial wallet state
@@ -75,6 +80,9 @@ const initialGameState: GameState = {
   receiptId: null,
   winner: null,
   playerWon: null,
+  betTransactionId: null,
+  revealTransactionId: null,
+  settleTransactionId: null,
 };
 
 /**
@@ -177,6 +185,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ...state.game,
         winner,
         playerWon,
+      },
+    })),
+
+  setBetTransactionId: (id: string) =>
+    set((state) => ({
+      game: {
+        ...state.game,
+        betTransactionId: id,
+      },
+    })),
+
+  setRevealTransactionId: (id: string) =>
+    set((state) => ({
+      game: {
+        ...state.game,
+        revealTransactionId: id,
+      },
+    })),
+
+  setSettleTransactionId: (id: string) =>
+    set((state) => ({
+      game: {
+        ...state.game,
+        settleTransactionId: id,
       },
     })),
 

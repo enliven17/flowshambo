@@ -76,7 +76,7 @@ transaction(prediction: UInt8, amount: UFix64) {
  * Parse BetCommitted event from transaction result
  */
 function parseBetCommittedEvent(events: Array<{ type: string; data: Record<string, unknown> }>): BetCommitmentResult | null {
-  const betCommittedEvent = events.find((event) => 
+  const betCommittedEvent = events.find((event) =>
     event.type.includes('FlowShambo.BetCommitted')
   );
 
@@ -205,16 +205,21 @@ export function usePlaceBet(): UsePlaceBetResult {
         // Update game store with committed bet
         commitBet(prediction, amount, betResult.receiptId);
 
+        // Save transaction ID to store
+        if (txId) {
+          useGameStore.getState().setBetTransactionId(txId);
+        }
+
         setIsPlacing(false);
         setLoading(false);
 
         return betResult;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to place bet';
-        
+
         // Handle specific error cases
         let userFriendlyMessage = errorMessage;
-        
+
         if (errorMessage.includes('User rejected')) {
           userFriendlyMessage = 'Transaction was cancelled';
         } else if (errorMessage.includes('insufficient funds') || errorMessage.includes('Insufficient')) {

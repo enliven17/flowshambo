@@ -335,3 +335,41 @@ input::placeholder {
 .animate-scale-in {
   animation: scaleIn var(--transition-normal);
 }
+
+/* Responsive Breakpoints */
+/* Mobile: < 640px */
+/* Tablet: 640px - 1024px */
+/* Desktop: > 1024px */
+
+@media (max-width: 640px) {
+  /* Typography adjustments for mobile */
+  h1 {
+    font-size: 1.75rem;
+  }
+  
+  h2 {
+    font-size: 1.25rem;
+  }
+  
+  h3 {
+    font-size: 1rem;
+  }
+  
+  /* Reduce spacing on mobile */
+  :root {
+    --spacing-xl: 16px;
+    --spacing-2xl: 24px;
+    --spacing-3xl: 32px;
+  }
+  
+  /* Smaller buttons on mobile */
+  .btn-primary, .btn-secondary {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: 0.875rem;
+  }
+  
+  /* Panel adjustments */
+  .panel {
+    padding: var(--spacing-lg);
+  }
+}

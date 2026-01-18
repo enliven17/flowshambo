@@ -1,8 +1,7 @@
-'use client';
-
 import { useCallback, useState } from 'react';
 import * as fcl from '@onflow/fcl';
 import { useGameStore } from '../stores/gameStore';
+import { generateObjects } from '../lib/game/generator';
 import type { GameInitData, ObjectInit, GameObject, ObjectType } from '../types';
 
 /**
@@ -23,8 +22,6 @@ export interface UseRevealGameResult {
 
 /**
  * Cadence transaction code for revealing a game
- * This transaction calls the FlowShambo contract's revealGame function
- * and emits the GameRevealed event with initial object positions
  */
 const REVEAL_GAME_TRANSACTION = `
 import FlowShambo from 0x9d8d1e6cee0341ec
@@ -46,7 +43,7 @@ transaction() {
 `;
 
 /**
- * Parse GameRevealed event from transaction result to extract GameInitData
+ * Parse GameRevealed event and generate objects locally
  */
 function parseGameRevealedEvent(
   events: Array<{ type: string; data: Record<string, unknown> }>
@@ -62,26 +59,17 @@ function parseGameRevealedEvent(
   const eventData = gameRevealedEvent.data as {
     receiptId: string;
     seed: string;
-    objects: Array<{
-      objectType: string;
-      x: string;
-      y: string;
-      vx: string;
-      vy: string;
-    }>;
+    objectCount: string;
   };
 
-  // Parse objects from event data
-  const objects: ObjectInit[] = (eventData.objects || []).map((obj) => ({
-    objectType: parseInt(obj.objectType, 10),
-    x: parseFloat(obj.x),
-    y: parseFloat(obj.y),
-    vx: parseFloat(obj.vx),
-    vy: parseFloat(obj.vy),
-  }));
+  const seed = eventData.seed.toString();
+
+  // Generate objects locally using the seed from the event
+  // This matches the deterministic logic on the contract
+  const objects = generateObjects(seed);
 
   return {
-    seed: eventData.seed.toString(),
+    seed,
     objects,
   };
 }
@@ -109,42 +97,6 @@ function objectInitToGameObject(init: ObjectInit, index: number, radius: number 
 
 /**
  * useRevealGame hook - Handles game reveal transactions on Flow blockchain
- *
- * This hook provides functionality to:
- * - Submit a reveal transaction to the FlowShambo contract
- * - Parse the GameRevealed event to extract initial object positions
- * - Update game state to 'simulating' phase on success
- * - Handle errors and provide retry capability
- *
- * The reveal transaction is Phase 2 of the commit-reveal scheme:
- * 1. User commits a bet (Phase 1 - handled by usePlaceBet)
- * 2. Wait for at least 1 block
- * 3. Reveal the game to get random initial positions (Phase 2 - this hook)
- *
- * @example
- * ```tsx
- * function GameComponent() {
- *   const { revealGame, isRevealing, error, clearError } = useRevealGame();
- *   const { start: startSimulation } = useSimulation();
- *
- *   const handleReveal = async () => {
- *     const initData = await revealGame();
- *     if (initData) {
- *       startSimulation(initData);
- *     }
- *   };
- *
- *   return (
- *     <button onClick={handleReveal} disabled={isRevealing}>
- *       {isRevealing ? 'Revealing...' : 'Start Game'}
- *     </button>
- *   );
- * }
- * ```
- *
- * @returns {UseRevealGameResult} Reveal state and actions
- *
- * Requirements: 3.1, 3.6, 4.1
  */
 export function useRevealGame(): UseRevealGameResult {
   const [isRevealing, setIsRevealing] = useState(false);
@@ -156,18 +108,10 @@ export function useRevealGame(): UseRevealGameResult {
   const setLoading = useGameStore((state) => state.setLoading);
   const setStoreError = useGameStore((state) => state.setError);
 
-  /**
-   * Clear any error state
-   */
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
-  /**
-   * Reveal the game and get initial object positions
-   *
-   * @returns The game initialization data, or null if the transaction failed
-   */
   const revealGame = useCallback(async (): Promise<GameInitData | null> => {
     if (isRevealing) {
       return null;
@@ -179,38 +123,36 @@ export function useRevealGame(): UseRevealGameResult {
     setLoading(true, 'revealing-game');
 
     try {
-      // Submit the reveal transaction
       const txId = await fcl.mutate({
         cadence: REVEAL_GAME_TRANSACTION,
         args: () => [],
-        limit: 1000, // Gas limit
+        limit: 1000,
       });
 
       setTransactionId(txId);
 
-      // Wait for transaction to be sealed
       const txResult = await fcl.tx(txId).onceSealed();
 
-      // Check for transaction errors
       if (txResult.statusCode !== 0) {
-        const errorMessage = txResult.errorMessage || 'Transaction failed';
-        throw new Error(errorMessage);
+        throw new Error(txResult.errorMessage || 'Transaction failed');
       }
 
-      // Parse the GameRevealed event to get initial positions
       const gameInitData = parseGameRevealedEvent(txResult.events || []);
 
       if (!gameInitData) {
         throw new Error('Failed to parse game reveal event');
       }
 
-      // Convert ObjectInit to GameObject for the store
       const gameObjects = gameInitData.objects.map((init, index) =>
         objectInitToGameObject(init, index)
       );
 
-      // Update game store to simulating phase with objects
       startSimulation(gameObjects);
+
+      // Save transaction ID to store
+      if (txId) {
+        useGameStore.getState().setRevealTransactionId(txId);
+      }
 
       setIsRevealing(false);
       setLoading(false);
@@ -219,7 +161,6 @@ export function useRevealGame(): UseRevealGameResult {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to reveal game';
 
-      // Handle specific error cases
       let userFriendlyMessage = errorMessage;
 
       if (errorMessage.includes('User rejected')) {
@@ -230,8 +171,6 @@ export function useRevealGame(): UseRevealGameResult {
         userFriendlyMessage = 'Game has already been revealed';
       } else if (errorMessage.includes('too early') || errorMessage.includes('same block')) {
         userFriendlyMessage = 'Please wait for the next block before revealing';
-      } else if (errorMessage.includes('Network') || errorMessage.includes('network')) {
-        userFriendlyMessage = 'Network error. Please try again.';
       }
 
       setError(userFriendlyMessage);

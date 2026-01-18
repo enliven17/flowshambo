@@ -62,31 +62,51 @@ export function updatePosition(object: GameObject, deltaTime: number): void {
  * **Validates: Requirements 4.3**
  * **Property 7: Wall Bounce Reflection**
  */
-export function handleWallCollision(object: GameObject, arena: ArenaConfig): void {
+export function handleWallCollision(object: GameObject, arena: ArenaConfig): boolean {
   const minX = object.radius;
   const maxX = arena.width - object.radius;
   const minY = object.radius;
-  const maxY = arena.height - object.radius;
+  const maxY = arena.height - object.radius - 20; // Added 20px buffer for bottom browser bar
+
+  let collided = false;
 
   // Check left wall collision
-  if (object.x < minX) {
+  if (object.x <= minX) {
     object.x = minX;
-    object.vx = -object.vx;
+    // Only bounce if moving towards wall
+    if (object.vx < 0) {
+      object.vx = -object.vx;
+      collided = true;
+    }
   }
   // Check right wall collision
-  else if (object.x > maxX) {
+  else if (object.x >= maxX) {
     object.x = maxX;
-    object.vx = -object.vx;
+    // Only bounce if moving towards wall
+    if (object.vx > 0) {
+      object.vx = -object.vx;
+      collided = true;
+    }
   }
 
   // Check top wall collision
-  if (object.y < minY) {
+  if (object.y <= minY) {
     object.y = minY;
-    object.vy = -object.vy;
+    // Only bounce if moving towards wall
+    if (object.vy < 0) {
+      object.vy = -object.vy;
+      collided = true;
+    }
   }
   // Check bottom wall collision
-  else if (object.y > maxY) {
+  else if (object.y >= maxY) {
     object.y = maxY;
-    object.vy = -object.vy;
+    // Only bounce if moving towards wall
+    if (object.vy > 0) {
+      object.vy = -object.vy;
+      collided = true;
+    }
   }
+
+  return collided;
 }

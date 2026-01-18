@@ -31,7 +31,8 @@ export function configureFCL() {
     .put('0xFungibleToken', '0x9a0766d93b6608b7') // FungibleToken contract on testnet
     .put('0xFlowShambo', '0x9d8d1e6cee0341ec') // FlowShambo contract deployed
     .put('discovery.authn.endpoint', 'https://fcl-discovery.onflow.org/testnet/authn')
-    .put('discovery.authn.include', ['0x82ec283f88a62e65', '0x9d2e44203cb13051']); // Lilico and Blocto testnet
+    .put('discovery.authn.include', ['0x82ec283f88a62e65', '0x9d2e44203cb13051']) // Lilico and Blocto testnet
+    .put('walletconnect.projectId', 'USER_PROJECT_ID'); // TODO: Replace with your WalletConnect Project ID
 }
 
 // Export FCL for use throughout the app

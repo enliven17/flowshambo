@@ -146,7 +146,7 @@ export function useSimulation(): UseSimulationResult {
   const lastTimeRef = useRef<number>(0);
   const startTimeRef = useRef<number>(0);
   const isRunningRef = useRef(false);
-  
+
   // Ref to collect collision events during a frame
   const frameCollisionEventsRef = useRef<CollisionEvent[]>([]);
 
@@ -159,10 +159,10 @@ export function useSimulation(): UseSimulationResult {
     }
 
     // Calculate delta time in seconds
-    const deltaTime = lastTimeRef.current === 0 
-      ? FRAME_DURATION_MS / 1000 
+    const deltaTime = lastTimeRef.current === 0
+      ? FRAME_DURATION_MS / 1000
       : (currentTime - lastTimeRef.current) / 1000;
-    
+
     lastTimeRef.current = currentTime;
 
     // Calculate elapsed time
@@ -174,12 +174,12 @@ export function useSimulation(): UseSimulationResult {
       // Timeout - determine winner by majority
       const engine = engineRef.current;
       const counts = engine.getCounts();
-      
+
       // Find type with highest count (with tiebreaker: rock > paper > scissors)
       let maxCount = -1;
       let timeoutWinner: ObjectType = 'rock';
       const priority: ObjectType[] = ['rock', 'paper', 'scissors'];
-      
+
       for (const type of priority) {
         if (counts[type] > maxCount) {
           maxCount = counts[type];
@@ -238,19 +238,19 @@ export function useSimulation(): UseSimulationResult {
     }
 
     // Convert ObjectInit array to GameObject array
-    const gameObjects = initData.objects.map((init, index) => 
+    const gameObjects = initData.objects.map((init, index) =>
       objectInitToGameObject(init, index, arenaConfig.objectRadius)
     );
 
     // Initialize physics engine
     const engine = new PhysicsEngine(arenaConfig);
     engine.initialize(gameObjects);
-    
+
     // Set up collision event listener for visual feedback
     engine.onCollision((event: CollisionEvent) => {
       frameCollisionEventsRef.current.push(event);
     });
-    
+
     engineRef.current = engine;
 
     // Reset state
@@ -268,7 +268,30 @@ export function useSimulation(): UseSimulationResult {
     frameCollisionEventsRef.current = [];
 
     // Start animation loop
-    animationFrameRef.current = requestAnimationFrame(animate);
+    // Clear any previous frame to avoid duplicates
+    if (animationFrameRef.current !== null) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+
+    // We pass the animate function by reference, relying on the fact that
+    // it's a stable callback or we use the closure.
+    // However, to fix the 'Maximum update depth exceeded' error, we
+    // should avoid 'animate' depending on state that changes frequently
+    // or triggering re-renders that re-create 'animate'.
+    //
+    // Current 'animate' has [] dependency, which is good.
+    // The issue might be that 'start' depends on 'animate', and 'start' is called
+    // in effects elsewhere?
+    //
+    // Actually, 'animate' calls setObjects, setElapsedTime, setCollisionEvents.
+    // These trigger re-renders.
+    //
+    // Let's ensure requestAnimationFrame uses the ref to the function.
+
+    const loop = (time: number) => {
+      animate(time);
+    };
+    animationFrameRef.current = requestAnimationFrame(loop);
   }, [animate]);
 
   /**
@@ -276,7 +299,7 @@ export function useSimulation(): UseSimulationResult {
    */
   const stop = useCallback(() => {
     isRunningRef.current = false;
-    
+
     if (animationFrameRef.current !== null) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
@@ -293,7 +316,7 @@ export function useSimulation(): UseSimulationResult {
   const reset = useCallback(() => {
     // Stop animation
     isRunningRef.current = false;
-    
+
     if (animationFrameRef.current !== null) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
@@ -325,7 +348,7 @@ export function useSimulation(): UseSimulationResult {
   useEffect(() => {
     return () => {
       isRunningRef.current = false;
-      
+
       if (animationFrameRef.current !== null) {
         cancelAnimationFrame(animationFrameRef.current);
       }

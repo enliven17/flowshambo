@@ -147,7 +147,11 @@ export class PhysicsEngine {
 
     // Step 2: Handle wall collisions for all objects
     for (const obj of this.objects) {
-      handleWallCollision(obj, this.arena);
+      if (handleWallCollision(obj, this.arena)) {
+        // Increase speed slightly when hitting a wall
+        obj.vx *= 1.05;
+        obj.vy *= 1.05;
+      }
     }
 
     // Step 3: Detect and resolve object-to-object collisions
@@ -163,7 +167,7 @@ export class PhysicsEngine {
    */
   private handleObjectCollisions(): void {
     const n = this.objects.length;
-    
+
     // Check all pairs of objects for collisions
     for (let i = 0; i < n; i++) {
       for (let j = i + 1; j < n; j++) {
@@ -175,14 +179,14 @@ export class PhysicsEngine {
           // Calculate collision point (midpoint between centers)
           const collisionX = (objA.x + objB.x) / 2;
           const collisionY = (objA.y + objB.y) / 2;
-          
+
           // Determine winner based on RPS rules
           const winnerType = getWinner(objA.type, objB.type);
-          
+
           // Track transformation info for event
           let transformedObjectId: string | null = null;
           let newType: ObjectType | null = null;
-          
+
           // If there's a winner (different types), transform the loser
           if (winnerType !== null) {
             if (objA.type === winnerType) {
@@ -197,7 +201,7 @@ export class PhysicsEngine {
               resolveRPSCollision(objB, objA);
             }
           }
-          
+
           // Emit collision event for visual feedback
           const collisionEvent: CollisionEvent = {
             id: `collision-${this.collisionIdCounter++}`,
@@ -211,7 +215,7 @@ export class PhysicsEngine {
             newType
           };
           this.emitCollisionEvent(collisionEvent);
-          
+
           // Separate colliding objects to prevent repeated collisions
           this.separateObjects(objA, objB);
         }
@@ -227,7 +231,7 @@ export class PhysicsEngine {
     const dx = objB.x - objA.x;
     const dy = objB.y - objA.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    
+
     // Avoid division by zero
     if (distance === 0) {
       // Objects are at exact same position, push apart in random direction
@@ -237,12 +241,12 @@ export class PhysicsEngine {
     }
 
     const overlap = (objA.radius + objB.radius) - distance;
-    
+
     if (overlap > 0) {
       // Normalize direction vector
       const nx = dx / distance;
       const ny = dy / distance;
-      
+
       // Push each object apart by half the overlap
       const pushDistance = overlap / 2 + 0.1; // Small extra to ensure separation
       objA.x -= nx * pushDistance;
@@ -295,7 +299,7 @@ export class PhysicsEngine {
 
     const counts = this.getCounts();
     const typesWithObjects = Object.values(counts).filter(count => count > 0).length;
-    
+
     return typesWithObjects <= 1;
   }
 

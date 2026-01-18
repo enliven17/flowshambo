@@ -17,6 +17,8 @@ export interface LoadingOverlayProps {
   loadingType: LoadingType | null;
   /** Optional custom message to display */
   customMessage?: string;
+  /** Optional callback to force cancel (e.g. for stuck states) */
+  onCancel?: () => void;
 }
 
 /**
@@ -57,30 +59,13 @@ export function getLoadingSubtitle(loadingType: LoadingType | null): string | nu
 
 /**
  * LoadingOverlay component for full-screen loading states during transactions
- * 
- * Displays a centered loading spinner with Flow green color and
- * appropriate messaging based on the current loading operation.
- * 
- * Features:
- * - Full-screen overlay with semi-transparent background
- * - Animated Flow green spinner
- * - Context-aware loading messages
- * - Subtitle with additional context for transactions
- * 
- * @example
- * ```tsx
- * <LoadingOverlay
- *   isVisible={isLoading}
- *   loadingType="placing-bet"
- * />
- * ```
- * 
- * Requirements: 2.7
+ * ...
  */
 export function LoadingOverlay({
   isVisible,
   loadingType,
   customMessage,
+  onCancel,
 }: LoadingOverlayProps) {
   if (!isVisible) {
     return null;
@@ -152,7 +137,7 @@ export function LoadingOverlay({
           >
             {message}
           </p>
-          
+
           {subtitle && (
             <p
               className="loading-subtitle"
@@ -191,9 +176,30 @@ export function LoadingOverlay({
             />
           ))}
         </div>
+
+        {/* Force Cancel Button - For stuck states */}
+        {onCancel && (
+          <button
+            onClick={onCancel}
+            style={{
+              marginTop: '16px',
+              backgroundColor: 'transparent',
+              border: '1px solid #666',
+              color: '#888',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            Stuck? Force Cancel
+          </button>
+        )}
       </div>
 
       {/* CSS Animations */}
+
       <style>{`
         @keyframes loading-spin {
           from { transform: rotate(0deg); }

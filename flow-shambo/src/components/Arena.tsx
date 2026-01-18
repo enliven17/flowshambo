@@ -298,6 +298,39 @@ export function Arena({
   // Animation frame ref for flash effects
   const flashAnimationRef = useRef<number | null>(null);
   const lastFlashTimeRef = useRef<number>(0);
+  
+  // Responsive scaling
+  const [scale, setScale] = useState(1);
+  const [displayWidth, setDisplayWidth] = useState(width);
+  const [displayHeight, setDisplayHeight] = useState(height);
+
+  /**
+   * Handle responsive scaling based on container width
+   */
+  useEffect(() => {
+    const updateScale = () => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const containerWidth = container.parentElement?.clientWidth ?? window.innerWidth;
+      const maxWidth = Math.min(containerWidth - 24, width); // 24px for padding
+      
+      if (maxWidth < width) {
+        const newScale = maxWidth / width;
+        setScale(newScale);
+        setDisplayWidth(maxWidth);
+        setDisplayHeight(height * newScale);
+      } else {
+        setScale(1);
+        setDisplayWidth(width);
+        setDisplayHeight(height);
+      }
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, [width, height]);
 
   /**
    * Process new collision events and create flash effects
@@ -435,6 +468,8 @@ export function Arena({
         backgroundColor: ARENA_BACKGROUND,
         borderRadius: '8px',
         overflow: 'hidden',
+        width: '100%',
+        maxWidth: `${width}px`,
       }}
       data-testid="arena-container"
     >
@@ -444,6 +479,9 @@ export function Arena({
         height={height}
         style={{
           display: 'block',
+          width: `${displayWidth}px`,
+          height: `${displayHeight}px`,
+          maxWidth: '100%',
         }}
         data-testid="arena-canvas"
         aria-label={`Game arena with ${objects.length} objects`}
@@ -454,14 +492,16 @@ export function Arena({
           className="arena-counts"
           style={{
             position: 'absolute',
-            top: '12px',
-            left: '12px',
+            top: 'clamp(8px, 1.5vw, 12px)',
+            left: 'clamp(8px, 1.5vw, 12px)',
             display: 'flex',
-            gap: '12px',
+            gap: 'clamp(8px, 1.5vw, 12px)',
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            padding: '8px 12px',
+            padding: 'clamp(6px, 1vw, 8px) clamp(8px, 1.5vw, 12px)',
             borderRadius: '8px',
             border: `1px solid ${FLOW_GREEN}`,
+            fontSize: 'clamp(12px, 2vw, 14px)',
+            flexWrap: 'wrap',
           }}
           data-testid="arena-counts"
         >

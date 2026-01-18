@@ -256,6 +256,11 @@ export function useSettleGame(): UseSettleGameResult {
         // Update game store to settled phase
         settleGameStore(winningType, playerWon);
 
+        // Save transaction ID to store
+        if (txId) {
+          useGameStore.getState().setSettleTransactionId(txId);
+        }
+
         setIsSettling(false);
         setLoading(false);
 

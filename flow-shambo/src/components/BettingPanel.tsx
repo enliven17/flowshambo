@@ -34,6 +34,8 @@ export interface BettingPanelProps {
   transactionError?: string | null;
   /** Callback to clear transaction error and retry */
   onClearError?: () => void;
+  /** Callback to reset the game (clear stuck receipt) */
+  onResetGame?: () => void;
 }
 
 /**
@@ -81,6 +83,7 @@ export function BettingPanel({
   isLoading = false,
   transactionError = null,
   onClearError,
+  onResetGame,
 }: BettingPanelProps) {
   const [selectedPrediction, setSelectedPrediction] = useState<ObjectType | null>(null);
   const [betAmount, setBetAmount] = useState<string>('');
@@ -179,7 +182,7 @@ export function BettingPanel({
       style={{
         backgroundColor: '#1a1a1a',
         borderRadius: '12px',
-        padding: '24px',
+        padding: 'clamp(16px, 3vw, 24px)',
         maxWidth: '400px',
         width: '100%',
       }}
@@ -188,9 +191,9 @@ export function BettingPanel({
       <h2
         style={{
           color: FLOW_GREEN,
-          fontSize: '20px',
+          fontSize: 'clamp(16px, 3vw, 20px)',
           fontWeight: '600',
-          marginBottom: '20px',
+          marginBottom: 'clamp(16px, 2.5vw, 20px)',
           textAlign: 'center',
         }}
       >
@@ -198,14 +201,14 @@ export function BettingPanel({
       </h2>
 
       {/* Prediction Selector */}
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ marginBottom: 'clamp(16px, 3vw, 24px)' }}>
         <label
           style={{
             display: 'block',
             color: '#ffffff',
-            fontSize: '14px',
+            fontSize: 'clamp(12px, 2vw, 14px)',
             fontWeight: '500',
-            marginBottom: '12px',
+            marginBottom: 'clamp(8px, 1.5vw, 12px)',
           }}
         >
           Select Your Prediction
@@ -214,8 +217,9 @@ export function BettingPanel({
           className="prediction-selector"
           style={{
             display: 'flex',
-            gap: '12px',
+            gap: 'clamp(8px, 1.5vw, 12px)',
             justifyContent: 'center',
+            flexWrap: 'wrap',
           }}
         >
           {OBJECT_TYPES.map(({ type, label, emoji }) => (
@@ -226,8 +230,9 @@ export function BettingPanel({
               className={`prediction-button prediction-button--${type}`}
               data-selected={selectedPrediction === type}
               style={{
-                flex: 1,
-                padding: '16px 12px',
+                flex: '1 1 calc(33.333% - 8px)',
+                minWidth: '80px',
+                padding: 'clamp(12px, 2vw, 16px) clamp(8px, 1.5vw, 12px)',
                 borderRadius: '8px',
                 border: `2px solid ${selectedPrediction === type ? FLOW_GREEN : '#333333'}`,
                 backgroundColor: selectedPrediction === type ? 'rgba(0, 239, 139, 0.1)' : 'transparent',
@@ -238,33 +243,35 @@ export function BettingPanel({
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '8px',
+                gap: 'clamp(4px, 1vw, 8px)',
               }}
               aria-pressed={selectedPrediction === type}
               aria-label={`Select ${label}`}
             >
-              <span style={{ fontSize: '28px' }}>{emoji}</span>
-              <span style={{ fontSize: '14px', fontWeight: '500' }}>{label}</span>
+              <span style={{ fontSize: 'clamp(20px, 4vw, 28px)' }}>{emoji}</span>
+              <span style={{ fontSize: 'clamp(12px, 2vw, 14px)', fontWeight: '500' }}>{label}</span>
             </button>
           ))}
         </div>
       </div>
 
       {/* Amount Input */}
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: 'clamp(16px, 2.5vw, 20px)' }}>
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '8px',
+            gap: '8px',
+            flexWrap: 'wrap',
           }}
         >
           <label
             htmlFor="bet-amount"
             style={{
               color: '#ffffff',
-              fontSize: '14px',
+              fontSize: 'clamp(12px, 2vw, 14px)',
               fontWeight: '500',
             }}
           >
@@ -279,7 +286,7 @@ export function BettingPanel({
               border: `1px solid ${FLOW_GREEN}`,
               borderRadius: '4px',
               color: FLOW_GREEN,
-              fontSize: '12px',
+              fontSize: 'clamp(10px, 1.5vw, 12px)',
               padding: '4px 8px',
               cursor: disabled || isLoading ? 'not-allowed' : 'pointer',
               opacity: disabled || isLoading ? 0.5 : 1,
@@ -301,13 +308,13 @@ export function BettingPanel({
             className="bet-amount-input"
             style={{
               width: '100%',
-              padding: '12px 16px',
+              padding: 'clamp(10px, 1.5vw, 12px) clamp(12px, 2vw, 16px)',
               paddingRight: '60px',
               borderRadius: '8px',
               border: `2px solid ${validation.errorMessage && touched ? '#ff6b6b' : '#333333'}`,
               backgroundColor: '#0d0d0d',
               color: '#ffffff',
-              fontSize: '16px',
+              fontSize: 'clamp(14px, 2.5vw, 16px)',
               outline: 'none',
               opacity: disabled || isLoading ? 0.5 : 1,
               boxSizing: 'border-box',
@@ -318,11 +325,11 @@ export function BettingPanel({
           <span
             style={{
               position: 'absolute',
-              right: '16px',
+              right: 'clamp(12px, 2vw, 16px)',
               top: '50%',
               transform: 'translateY(-50%)',
               color: '#666666',
-              fontSize: '14px',
+              fontSize: 'clamp(12px, 2vw, 14px)',
             }}
           >
             FLOW
@@ -335,7 +342,7 @@ export function BettingPanel({
             role="alert"
             style={{
               color: '#ff6b6b',
-              fontSize: '12px',
+              fontSize: 'clamp(10px, 1.5vw, 12px)',
               marginTop: '8px',
               marginBottom: 0,
             }}
@@ -347,9 +354,10 @@ export function BettingPanel({
         <p
           style={{
             color: '#666666',
-            fontSize: '12px',
+            fontSize: 'clamp(10px, 1.5vw, 12px)',
             marginTop: '8px',
             marginBottom: 0,
+            wordBreak: 'break-word',
           }}
         >
           Min: {minBet} FLOW • Max: {maxBet} FLOW • Balance: {balance.toFixed(4)} FLOW
@@ -363,20 +371,22 @@ export function BettingPanel({
           style={{
             backgroundColor: 'rgba(0, 239, 139, 0.1)',
             borderRadius: '8px',
-            padding: '12px 16px',
-            marginBottom: '20px',
+            padding: 'clamp(10px, 1.5vw, 12px) clamp(12px, 2vw, 16px)',
+            marginBottom: 'clamp(16px, 2.5vw, 20px)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            gap: '8px',
+            flexWrap: 'wrap',
           }}
         >
-          <span style={{ color: '#ffffff', fontSize: '14px' }}>
+          <span style={{ color: '#ffffff', fontSize: 'clamp(12px, 2vw, 14px)' }}>
             Potential Payout ({PAYOUT_MULTIPLIER}x)
           </span>
           <span
             style={{
               color: FLOW_GREEN,
-              fontSize: '18px',
+              fontSize: 'clamp(14px, 2.5vw, 18px)',
               fontWeight: '600',
             }}
           >
@@ -392,12 +402,12 @@ export function BettingPanel({
         className="place-bet-button"
         style={{
           width: '100%',
-          padding: '16px',
+          padding: 'clamp(12px, 2vw, 16px)',
           borderRadius: '8px',
           border: 'none',
           backgroundColor: canPlaceBet ? FLOW_GREEN : '#333333',
           color: canPlaceBet ? '#000000' : '#666666',
-          fontSize: '16px',
+          fontSize: 'clamp(14px, 2.5vw, 16px)',
           fontWeight: '600',
           cursor: canPlaceBet ? 'pointer' : 'not-allowed',
           transition: 'all 0.2s ease',
@@ -434,21 +444,21 @@ export function BettingPanel({
             backgroundColor: 'rgba(255, 107, 107, 0.1)',
             border: '1px solid #ff6b6b',
             borderRadius: '8px',
-            padding: '12px 16px',
-            marginTop: '16px',
+            padding: 'clamp(10px, 1.5vw, 12px) clamp(12px, 2vw, 16px)',
+            marginTop: 'clamp(12px, 2vw, 16px)',
           }}
         >
           <div
             style={{
               display: 'flex',
               alignItems: 'flex-start',
-              gap: '12px',
+              gap: 'clamp(8px, 1.5vw, 12px)',
             }}
           >
             <span
               style={{
                 color: '#ff6b6b',
-                fontSize: '18px',
+                fontSize: 'clamp(14px, 2.5vw, 18px)',
                 lineHeight: '1',
               }}
               aria-hidden="true"
@@ -459,7 +469,7 @@ export function BettingPanel({
               <p
                 style={{
                   color: '#ff6b6b',
-                  fontSize: '14px',
+                  fontSize: 'clamp(12px, 2vw, 14px)',
                   fontWeight: '500',
                   margin: 0,
                   marginBottom: '8px',
@@ -470,10 +480,11 @@ export function BettingPanel({
               <p
                 style={{
                   color: '#ffffff',
-                  fontSize: '13px',
+                  fontSize: 'clamp(11px, 1.8vw, 13px)',
                   margin: 0,
-                  marginBottom: '12px',
+                  marginBottom: 'clamp(8px, 1.5vw, 12px)',
                   opacity: 0.9,
+                  wordBreak: 'break-word',
                 }}
               >
                 {transactionError}
@@ -482,6 +493,7 @@ export function BettingPanel({
                 style={{
                   display: 'flex',
                   gap: '8px',
+                  flexWrap: 'wrap',
                 }}
               >
                 <button
@@ -489,12 +501,12 @@ export function BettingPanel({
                   disabled={isLoading || !selectedPrediction || parsedAmount <= 0 || !validation.valid}
                   className="retry-button"
                   style={{
-                    padding: '8px 16px',
+                    padding: 'clamp(6px, 1vw, 8px) clamp(12px, 2vw, 16px)',
                     borderRadius: '6px',
                     border: 'none',
                     backgroundColor: FLOW_GREEN,
                     color: '#000000',
-                    fontSize: '13px',
+                    fontSize: 'clamp(11px, 1.8vw, 13px)',
                     fontWeight: '600',
                     cursor: isLoading ? 'not-allowed' : 'pointer',
                     opacity: isLoading ? 0.5 : 1,
@@ -503,16 +515,41 @@ export function BettingPanel({
                 >
                   Retry
                 </button>
+
+                {/* Reset Game Button for Stuck Games */}
+                {transactionError && transactionError.includes('already in progress') && onResetGame && (
+                  <button
+                    onClick={() => {
+                      onResetGame();
+                      if (onClearError) onClearError();
+                    }}
+                    className="reset-button"
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: '1px solid #ff6b6b',
+                      backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                      color: '#ff6b6b',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    Reset Game
+                  </button>
+                )}
+
                 <button
                   onClick={handleDismissError}
                   className="dismiss-button"
                   style={{
-                    padding: '8px 16px',
+                    padding: 'clamp(6px, 1vw, 8px) clamp(12px, 2vw, 16px)',
                     borderRadius: '6px',
                     border: '1px solid #666666',
                     backgroundColor: 'transparent',
                     color: '#ffffff',
-                    fontSize: '13px',
+                    fontSize: 'clamp(11px, 1.8vw, 13px)',
                     fontWeight: '500',
                     cursor: 'pointer',
                     transition: 'border-color 0.2s ease',
@@ -531,9 +568,9 @@ export function BettingPanel({
         <p
           style={{
             color: '#ff6b6b',
-            fontSize: '12px',
+            fontSize: 'clamp(10px, 1.5vw, 12px)',
             textAlign: 'center',
-            marginTop: '12px',
+            marginTop: 'clamp(8px, 1.5vw, 12px)',
             marginBottom: 0,
           }}
         >
