@@ -3,7 +3,7 @@
 // Phase 2 of the commit-reveal scheme
 // Must be called after at least 1 block has passed since commit
 
-import "FlowShambo"
+import FlowShambo from 0x9d8d1e6cee0341ec
 
 /// Reveals the game by generating initial object positions from on-chain randomness
 /// Returns the GameInitData containing seed and object positions/velocities

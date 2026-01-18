@@ -3,9 +3,9 @@
 // Phase 3 of the commit-reveal scheme
 // Called after the physics simulation determines a winner
 
-import "FungibleToken"
-import "FlowToken"
-import "FlowShambo"
+import FungibleToken from 0x9a0766d93b6608b7
+import FlowToken from 0x7e60df042a9c0868
+import FlowShambo from 0x9d8d1e6cee0341ec
 
 /// Settles the game by comparing the winning type to the player's prediction
 /// If the player won, they receive betAmount * PAYOUT_MULTIPLIER

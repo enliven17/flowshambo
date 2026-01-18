@@ -2,9 +2,9 @@
 // Transaction to commit a bet in FlowShambo
 // Phase 1 of the commit-reveal scheme
 
-import "FungibleToken"
-import "FlowToken"
-import "FlowShambo"
+import FungibleToken from 0x9a0766d93b6608b7
+import FlowToken from 0x7e60df042a9c0868
+import FlowShambo from 0x9d8d1e6cee0341ec
 
 /// Commits a bet by escrowing FLOW tokens and receiving a Receipt
 /// The Receipt is stored in the player's account for later reveal and settlement

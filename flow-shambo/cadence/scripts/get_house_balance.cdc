@@ -1,7 +1,7 @@
 // get_house_balance.cdc
 // Script to get the FlowShambo house balance and statistics
 
-import "FlowShambo"
+import FlowShambo from 0x9d8d1e6cee0341ec
 
 /// Returns the house statistics including balance and total bets
 /// This is useful for monitoring the contract state

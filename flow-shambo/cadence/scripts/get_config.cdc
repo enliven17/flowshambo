@@ -1,5 +1,5 @@
 // Script to get FlowShambo contract configuration
-import FlowShambo from "../contracts/FlowShambo.cdc"
+import FlowShambo from 0x9d8d1e6cee0341ec
 
 access(all) fun main(): {String: AnyStruct} {
     return {

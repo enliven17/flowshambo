@@ -179,12 +179,12 @@ flow transactions send ./cadence/transactions/settle_game.cdc 0 --network testne
 | FlowToken | 0x7e60df042a9c0868 |
 | RandomBeaconHistory | 0x8c5303eaa26202d6 |
 
-### FlowShambo (After Deployment)
+### FlowShambo (Deployed)
 
 | Network | Address |
 |---------|---------|
 | Emulator | 0xf8d6e0586b0a20c7 |
-| Testnet | YOUR_DEPLOYED_ADDRESS |
+| Testnet | 0x9d8d1e6cee0341ec |
 
 ## Troubleshooting
 

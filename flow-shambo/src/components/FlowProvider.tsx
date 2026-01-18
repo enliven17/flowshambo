@@ -2,6 +2,7 @@
 
 import { useEffect, ReactNode } from 'react';
 import { FlowProvider as FlowSDKProvider } from '@onflow/react-sdk';
+import { configureFCL } from '../config/flow';
 
 interface FlowProviderProps {
   children: ReactNode;
@@ -13,6 +14,16 @@ interface FlowProviderProps {
  * Configured for Flow testnet.
  */
 export function FlowProvider({ children }: FlowProviderProps) {
+  // Configure FCL on mount
+  useEffect(() => {
+    configureFCL();
+    
+    // Log configuration for debugging
+    console.log('FCL configured for testnet');
+    console.log('Access Node:', 'https://rest-testnet.onflow.org');
+    console.log('Network:', 'testnet');
+  }, []);
+
   return (
     <FlowSDKProvider
       config={{

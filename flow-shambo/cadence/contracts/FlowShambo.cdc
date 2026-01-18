@@ -419,13 +419,16 @@ access(all) contract FlowShambo {
     /// Simple PRNG: Linear Congruential Generator
     /// Uses modular arithmetic to avoid overflow issues
     access(self) fun nextRandom(_ seed: UInt256): UInt256 {
-        // LCG parameters (using smaller values to avoid overflow)
-        // Using a simpler multiplier that won't overflow with UInt256
-        let a: UInt256 = 1103515245
-        let c: UInt256 = 12345
-        let m: UInt256 = 2147483648  // 2^31
-        // Apply modular arithmetic to prevent overflow
-        return ((seed * a) + c) % m
+        // LCG parameters - using very small values to prevent overflow
+        // Since UInt256 multiplication can overflow, we use modulo first
+        let m: UInt256 = 2147483647  // 2^31 - 1 (Mersenne prime)
+        let a: UInt256 = 48271       // Small multiplier
+        let c: UInt256 = 0           // No increment needed
+        
+        // Apply modular arithmetic: (a * seed) % m
+        // First reduce seed to prevent overflow
+        let reducedSeed = seed % m
+        return (a * reducedSeed + c) % m
     }
     
     /// Generate a random UFix64 in range [min, max]

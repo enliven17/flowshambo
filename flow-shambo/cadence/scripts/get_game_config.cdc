@@ -1,7 +1,7 @@
 // get_game_config.cdc
 // Script to get the FlowShambo game configuration
 
-import "FlowShambo"
+import FlowShambo from 0x9d8d1e6cee0341ec
 
 /// Returns the game configuration including bet limits and payout multiplier
 /// This is useful for the frontend to display betting constraints

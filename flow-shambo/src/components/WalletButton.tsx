@@ -298,6 +298,18 @@ export function WalletButton({
         aria-label={`Wallet ${truncateAddress(address)}`}
       >
         <span 
+          className="network-indicator"
+          style={{ 
+            color: '#ffa500',
+            fontSize: '10px',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}
+        >
+          TESTNET
+        </span>
+        <span 
           className="wallet-address"
           style={{ fontFamily: 'monospace' }}
         >

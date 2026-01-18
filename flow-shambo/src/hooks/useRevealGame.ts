@@ -27,7 +27,7 @@ export interface UseRevealGameResult {
  * and emits the GameRevealed event with initial object positions
  */
 const REVEAL_GAME_TRANSACTION = `
-import "FlowShambo"
+import FlowShambo from 0x9d8d1e6cee0341ec
 
 transaction() {
     

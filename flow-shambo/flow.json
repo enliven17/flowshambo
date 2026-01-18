@@ -4,7 +4,7 @@
 			"source": "./cadence/contracts/FlowShambo.cdc",
 			"aliases": {
 				"emulator": "f8d6e0586b0a20c7",
-				"testnet": "0000000000000001"
+				"testnet": "9d8d1e6cee0341ec"
 			}
 		}
 	},
@@ -93,7 +93,7 @@
 			"key": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
 		},
 		"testnet-account": {
-			"address": "0000000000000001",
+			"address": "0x9d8d1e6cee0341ec",
 			"key": {
 				"type": "file",
 				"location": "./testnet-account.pkey"

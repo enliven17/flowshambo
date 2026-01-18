@@ -65,9 +65,9 @@ export interface UseSettleGameResult {
  * and handles payout transfer to the player's wallet
  */
 const SETTLE_GAME_TRANSACTION = `
-import "FungibleToken"
-import "FlowToken"
-import "FlowShambo"
+import FungibleToken from 0x9a0766d93b6608b7
+import FlowToken from 0x7e60df042a9c0868
+import FlowShambo from 0x9d8d1e6cee0341ec
 
 transaction(winningType: UInt8) {
     
