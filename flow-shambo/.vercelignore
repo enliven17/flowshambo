@@ -1,0 +1,38 @@
+# Test files
+**/*.test.ts
+**/*.test.tsx
+src/test/
+
+# Private keys
+*.pkey
+testnet-account.pkey
+emulator-account.pkey
+
+# Flow config (contains private keys)
+flow.json
+
+# Debug files
+DEBUG_*.md
+
+# Node modules
+node_modules/
+
+# Build files
+.next/
+out/
+
+# Environment files (will be set in Vercel dashboard)
+.env.local
+.env
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Misc
+*.log
+.DS_Store

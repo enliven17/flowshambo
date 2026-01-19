@@ -171,14 +171,26 @@ export default function Home() {
 
         {/* Sticky Glass Navbar */}
         <header className="sticky top-0 z-50 w-full glass-strong border-b border-white/5">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-2 group cursor-pointer hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 rounded-lg bg-flow-green/20 border border-flow-green flex items-center justify-center animate-pulse group-hover:animate-none">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-flow-green">
-                  <path d="M12.378 1.602a.75.75 0 00-.756 0L3 6.632l9 5.25 9-5.25-8.622-5.03zM21.75 7.93l-9 5.25v9l8.628-5.032a.75.75 0 00.372-.648V7.93zM11.25 22.18v-9l-9-5.25v8.57a.75.75 0 00.372.648l8.628 5.033z" />
-                </svg>
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-12 sm:h-16 flex items-center justify-between">
+            <div className="flex items-center gap-1.5 sm:gap-2 group cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-flow-green/20 border border-flow-green flex items-center justify-center overflow-hidden p-0.5">
+                <img 
+                  src="/logo.ico" 
+                  alt="FlowShambo" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    // Fallback to SVG if image fails to load
+                    e.currentTarget.style.display = 'none';
+                    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg.setAttribute('viewBox', '0 0 24 24');
+                    svg.setAttribute('fill', 'currentColor');
+                    svg.setAttribute('class', 'w-3.5 h-3.5 sm:w-5 sm:h-5 text-flow-green');
+                    svg.innerHTML = '<path d="M12.378 1.602a.75.75 0 00-.756 0L3 6.632l9 5.25 9-5.25-8.622-5.03zM21.75 7.93l-9 5.25v9l8.628-5.032a.75.75 0 00.372-.648V7.93zM11.25 22.18v-9l-9-5.25v8.57a.75.75 0 00.372.648l8.628 5.033z" />';
+                    e.currentTarget.parentElement?.appendChild(svg);
+                  }}
+                />
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-white group-hover:text-neon transition-all">
+              <h1 className="text-base sm:text-2xl font-bold tracking-tight text-white group-hover:text-neon transition-all">
                 Flow<span className="text-flow-green">Shambo</span>
               </h1>
             </div>
@@ -221,7 +233,7 @@ export default function Home() {
             </div>
 
             {/* Main Arena Display */}
-            <div className="flex-1 glass rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative min-h-[500px] flex flex-col group">
+            <div className="flex-1 glass rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] flex flex-col group">
               {/* Arena Glow Effect */}
               <div className="absolute -inset-1 bg-flow-green/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 

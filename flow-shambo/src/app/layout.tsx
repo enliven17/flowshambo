@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "FlowShambo - Rock Paper Scissors on Flow",
   description: "A physics-based rock-paper-scissors betting game on the Flow blockchain",
+  icons: {
+    icon: '/logo.ico',
+    shortcut: '/logo.ico',
+    apple: '/logo.ico',
+  },
 };
 
 export default function RootLayout({
