@@ -66,7 +66,7 @@ export function handleWallCollision(object: GameObject, arena: ArenaConfig): boo
   const minX = object.radius;
   const maxX = arena.width - object.radius;
   const minY = object.radius;
-  const maxY = arena.height - object.radius - 20; // Added 20px buffer for bottom browser bar
+  const maxY = arena.height - object.radius;
 
   let collided = false;
 

@@ -12,3 +12,4 @@ export { LoadingOverlay, getLoadingMessage, getLoadingSubtitle } from './Loading
 export type { LoadingOverlayProps } from './LoadingOverlay';
 export { ErrorDisplay } from './ErrorDisplay';
 export type { ErrorDisplayProps } from './ErrorDisplay';
+export { FlickeringGrid } from './FlickeringGrid';

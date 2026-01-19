@@ -64,10 +64,11 @@ export interface UseSimulationResult {
 
 /**
  * Default arena configuration
+ * Must match the dimensions passed to Arena component
  */
 const DEFAULT_ARENA_CONFIG: ArenaConfig = {
   width: 800,
-  height: 600,
+  height: 500,
   objectRadius: 15,
   objectsPerType: 5
 };
@@ -167,7 +168,6 @@ export function useSimulation(): UseSimulationResult {
 
     // Calculate elapsed time
     const elapsed = currentTime - startTimeRef.current;
-    setElapsedTime(elapsed);
 
     // Check for timeout
     if (elapsed >= SIMULATION_TIMEOUT_MS) {

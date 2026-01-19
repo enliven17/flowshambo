@@ -312,24 +312,32 @@ export function Arena({
       const container = containerRef.current;
       if (!container) return;
 
-      const containerWidth = container.parentElement?.clientWidth ?? window.innerWidth;
-      const maxWidth = Math.min(containerWidth - 24, width); // 24px for padding
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
       
-      if (maxWidth < width) {
-        const newScale = maxWidth / width;
-        setScale(newScale);
-        setDisplayWidth(maxWidth);
-        setDisplayHeight(height * newScale);
-      } else {
-        setScale(1);
-        setDisplayWidth(width);
-        setDisplayHeight(height);
-      }
+      // Calculate scale to fit container while maintaining aspect ratio
+      const scaleX = containerWidth / width;
+      const scaleY = containerHeight / height;
+      const newScale = Math.min(scaleX, scaleY);
+      
+      setScale(newScale);
+      setDisplayWidth(width * newScale);
+      setDisplayHeight(height * newScale);
     };
 
     updateScale();
     window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
+    
+    // Use ResizeObserver for container size changes
+    const resizeObserver = new ResizeObserver(updateScale);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      resizeObserver.disconnect();
+    };
   }, [width, height]);
 
   /**
@@ -464,82 +472,84 @@ export function Arena({
       className={`arena-container ${className}`}
       style={{
         position: 'relative',
-        display: 'inline-block',
+        display: 'flex',
+        flexDirection: 'column',
         backgroundColor: ARENA_BACKGROUND,
-        borderRadius: '8px',
+        borderRadius: '12px',
         overflow: 'hidden',
         width: '100%',
-        maxWidth: `${width}px`,
+        height: '100%',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
       }}
       data-testid="arena-container"
     >
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        style={{
-          display: 'block',
-          width: `${displayWidth}px`,
-          height: `${displayHeight}px`,
-          maxWidth: '100%',
-        }}
-        data-testid="arena-canvas"
-        aria-label={`Game arena with ${objects.length} objects`}
-      />
-      
+      {/* Object Counts - Compact Top Bar */}
       {showCounts && counts && (
         <div
           className="arena-counts"
           style={{
-            position: 'absolute',
-            top: 'clamp(8px, 1.5vw, 12px)',
-            left: 'clamp(8px, 1.5vw, 12px)',
             display: 'flex',
-            gap: 'clamp(8px, 1.5vw, 12px)',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            padding: 'clamp(6px, 1vw, 8px) clamp(8px, 1.5vw, 12px)',
-            borderRadius: '8px',
-            border: `1px solid ${FLOW_GREEN}`,
-            fontSize: 'clamp(12px, 2vw, 14px)',
-            flexWrap: 'wrap',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '8px 16px',
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            borderBottom: `1px solid ${FLOW_GREEN}`,
+            gap: '20px',
+            flexShrink: 0,
+            fontSize: '14px',
+            fontWeight: '600',
           }}
           data-testid="arena-counts"
         >
-          <span
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              color: OBJECT_COLORS.rock,
-              fontWeight: '600',
-            }}
-          >
-            {OBJECT_EMOJIS.rock} {counts.rock}
-          </span>
-          <span
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              color: OBJECT_COLORS.paper,
-              fontWeight: '600',
-            }}
-          >
-            {OBJECT_EMOJIS.paper} {counts.paper}
-          </span>
-          <span
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              color: OBJECT_COLORS.scissors,
-              fontWeight: '600',
-            }}
-          >
-            {OBJECT_EMOJIS.scissors} {counts.scissors}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: OBJECT_COLORS.rock }} />
+            <span style={{ color: OBJECT_COLORS.rock }}>R</span>
+            <span style={{ color: '#fff', minWidth: '16px', textAlign: 'center' }}>{counts.rock}</span>
+          </div>
+          
+          <div style={{ width: '1px', height: '16px', backgroundColor: 'rgba(255,255,255,0.2)' }} />
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: OBJECT_COLORS.paper }} />
+            <span style={{ color: OBJECT_COLORS.paper }}>P</span>
+            <span style={{ color: '#fff', minWidth: '16px', textAlign: 'center' }}>{counts.paper}</span>
+          </div>
+          
+          <div style={{ width: '1px', height: '16px', backgroundColor: 'rgba(255,255,255,0.2)' }} />
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: OBJECT_COLORS.scissors }} />
+            <span style={{ color: OBJECT_COLORS.scissors }}>S</span>
+            <span style={{ color: '#fff', minWidth: '16px', textAlign: 'center' }}>{counts.scissors}</span>
+          </div>
         </div>
       )}
+
+      {/* Canvas - Fills remaining space */}
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 0,
+        }}
+      >
+        <canvas
+          ref={canvasRef}
+          width={width}
+          height={height}
+          style={{
+            display: 'block',
+            width: `${displayWidth}px`,
+            height: `${displayHeight}px`,
+            maxWidth: '100%',
+            maxHeight: '100%',
+          }}
+          data-testid="arena-canvas"
+          aria-label={`Game arena with ${objects.length} objects`}
+        />
+      </div>
     </div>
   );
 }

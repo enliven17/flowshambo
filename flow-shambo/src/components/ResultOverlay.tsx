@@ -32,21 +32,12 @@ const FLOW_GREEN = '#00EF8B';
 const LOSE_COLOR = '#FF6B6B';
 
 /**
- * Object emojis by type
- */
-const OBJECT_EMOJIS: Record<ObjectType, string> = {
-  rock: '🪨',
-  paper: '📄',
-  scissors: '✂️',
-};
-
-/**
  * Object display names
  */
 const OBJECT_NAMES: Record<ObjectType, string> = {
-  rock: 'Rock',
-  paper: 'Paper',
-  scissors: 'Scissors',
+  rock: 'ROCK',
+  paper: 'PAPER',
+  scissors: 'SCISSORS',
 };
 
 /**
@@ -273,8 +264,7 @@ export function ResultOverlay({
   }
 
   const resultColor = playerWon ? FLOW_GREEN : LOSE_COLOR;
-  const resultMessage = playerWon ? 'You Won!' : 'You Lost';
-  const emoji = OBJECT_EMOJIS[winner];
+  const resultMessage = playerWon ? 'VICTORY' : 'DEFEAT';
   const winnerName = OBJECT_NAMES[winner];
 
   return (
@@ -289,7 +279,7 @@ export function ResultOverlay({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
         zIndex: 1000,
         overflow: 'hidden',
       }}
@@ -326,66 +316,50 @@ export function ResultOverlay({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '24px',
-          padding: '48px',
+          gap: '20px',
+          padding: 'clamp(32px, 5vw, 48px)',
           backgroundColor: '#1a1a1a',
-          borderRadius: '16px',
-          border: `3px solid ${resultColor}`,
-          boxShadow: `0 0 40px ${resultColor}40`,
+          borderRadius: '12px',
+          border: `2px solid ${resultColor}`,
+          boxShadow: `0 0 30px ${resultColor}40`,
           transform: showContent ? 'scale(1)' : 'scale(0.8)',
           opacity: showContent ? 1 : 0,
           transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
           animation: isShaking ? 'shake 0.5s ease-in-out' : 'none',
-          minWidth: '320px',
+          minWidth: 'clamp(280px, 80vw, 400px)',
+          maxWidth: '90vw',
           textAlign: 'center',
         }}
         data-testid="result-content"
       >
         {/* Win/Lose message */}
-        <h2
-          id="result-title"
-          style={{
-            fontSize: '48px',
-            fontWeight: 'bold',
-            color: resultColor,
-            margin: 0,
-            textShadow: playerWon ? `0 0 20px ${resultColor}` : 'none',
-          }}
-          data-testid="result-message"
-        >
-          {resultMessage}
-        </h2>
-
-        {/* Winning type with emoji */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <span
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+          <h2
+            id="result-title"
             style={{
-              fontSize: '64px',
-              animation: playerWon ? 'bounce 0.6s ease-in-out infinite' : 'none',
+              fontSize: 'clamp(32px, 8vw, 48px)',
+              fontWeight: '900',
+              color: resultColor,
+              margin: 0,
+              textShadow: playerWon ? `0 0 20px ${resultColor}` : 'none',
+              letterSpacing: '2px',
             }}
-            data-testid="winner-emoji"
-            role="img"
-            aria-label={winnerName}
+            data-testid="result-message"
           >
-            {emoji}
-          </span>
-          <span
+            {resultMessage}
+          </h2>
+          
+          <div
             style={{
-              fontSize: '24px',
+              fontSize: 'clamp(16px, 3vw, 20px)',
               color: '#ffffff',
-              fontWeight: '500',
+              fontWeight: '600',
+              letterSpacing: '1px',
             }}
             data-testid="winner-type"
           >
-            {winnerName} Wins!
-          </span>
+            {winnerName} WINS
+          </div>
         </div>
 
         {/* Payout amount */}
@@ -394,68 +368,78 @@ export function ResultOverlay({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '4px',
+            gap: '6px',
+            padding: '16px 24px',
+            backgroundColor: playerWon ? 'rgba(0, 239, 139, 0.1)' : 'rgba(255, 107, 107, 0.1)',
+            borderRadius: '8px',
+            border: `1px solid ${resultColor}`,
+            width: '100%',
           }}
         >
           <span
             style={{
-              fontSize: '16px',
+              fontSize: 'clamp(11px, 2vw, 13px)',
               color: '#888888',
               textTransform: 'uppercase',
               letterSpacing: '1px',
+              fontWeight: '600',
             }}
           >
-            {playerWon ? 'Payout' : 'Lost'}
+            {playerWon ? 'PAYOUT' : 'LOST'}
           </span>
           <span
             style={{
-              fontSize: '36px',
-              fontWeight: 'bold',
-              color: playerWon ? FLOW_GREEN : '#ffffff',
+              fontSize: 'clamp(28px, 6vw, 36px)',
+              fontWeight: '900',
+              color: resultColor,
             }}
             data-testid="payout-amount"
           >
-            {playerWon ? '+' : ''}{formatPayout(payout)} FLOW
+            {playerWon ? '+' : '-'}{formatPayout(playerWon ? payout : payout || 0)} FLOW
           </span>
         </div>
 
         {/* Transaction Links */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px', fontSize: '14px' }}>
-          {betTxId && (
-            <a href={getExplorerLink(betTxId)} target="_blank" rel="noopener noreferrer" style={{ color: '#888', textDecoration: 'none', borderBottom: '1px dotted #888' }}>
-              View Bet Transaction
-            </a>
-          )}
-          {revealTxId && (
-            <a href={getExplorerLink(revealTxId)} target="_blank" rel="noopener noreferrer" style={{ color: '#888', textDecoration: 'none', borderBottom: '1px dotted #888' }}>
-              View Reveal (Randomness)
-            </a>
-          )}
-          {settleTxId && (
-            <a href={getExplorerLink(settleTxId)} target="_blank" rel="noopener noreferrer" style={{ color: '#888', textDecoration: 'none', borderBottom: '1px dotted #888' }}>
-              View Payout Transaction
-            </a>
-          )}
-        </div>
-
+        {(betTxId || revealTxId || settleTxId) && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: 'clamp(10px, 1.8vw, 12px)', width: '100%' }}>
+            {betTxId && (
+              <a href={getExplorerLink(betTxId)} target="_blank" rel="noopener noreferrer" style={{ color: '#666', textDecoration: 'none', borderBottom: '1px dotted #666', padding: '4px 0' }}>
+                View Bet Transaction
+              </a>
+            )}
+            {revealTxId && (
+              <a href={getExplorerLink(revealTxId)} target="_blank" rel="noopener noreferrer" style={{ color: '#666', textDecoration: 'none', borderBottom: '1px dotted #666', padding: '4px 0' }}>
+                View Reveal Transaction
+              </a>
+            )}
+            {settleTxId && (
+              <a href={getExplorerLink(settleTxId)} target="_blank" rel="noopener noreferrer" style={{ color: '#666', textDecoration: 'none', borderBottom: '1px dotted #666', padding: '4px 0' }}>
+                View Settlement Transaction
+              </a>
+            )}
+          </div>
+        )}
 
         {/* Play Again button */}
         <button
           onClick={handlePlayAgain}
           style={{
-            padding: '16px 48px',
-            fontSize: '18px',
-            fontWeight: 'bold',
+            padding: 'clamp(12px, 2.5vw, 16px) clamp(32px, 8vw, 48px)',
+            fontSize: 'clamp(14px, 2.5vw, 16px)',
+            fontWeight: '700',
             color: '#000000',
             backgroundColor: FLOW_GREEN,
             border: 'none',
             borderRadius: '8px',
             cursor: 'pointer',
             transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-            marginTop: '16px',
+            marginTop: '8px',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            width: '100%',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.transform = 'scale(1.02)';
             e.currentTarget.style.boxShadow = `0 0 20px ${FLOW_GREEN}`;
           }}
           onMouseLeave={(e) => {
@@ -489,4 +473,4 @@ export function ResultOverlay({
 export default ResultOverlay;
 
 // Export constants for testing
-export { FLOW_GREEN, LOSE_COLOR, OBJECT_EMOJIS, OBJECT_NAMES, CONFETTI_COLORS };
+export { FLOW_GREEN, LOSE_COLOR, OBJECT_NAMES, CONFETTI_COLORS };

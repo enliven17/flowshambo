@@ -29,6 +29,7 @@ import { useRevealGame } from '../hooks/useRevealGame';
 import { useSettleGame } from '../hooks/useSettleGame';
 import { useSimulation } from '../hooks/useSimulation';
 import { useClearReceipt } from '../hooks/useClearReceipt';
+import { FlickeringGrid } from '../components/FlickeringGrid';
 import type { ObjectType, LoadingType } from '../types';
 
 /**
@@ -158,8 +159,62 @@ export default function Home() {
         backgroundColor: 'var(--background)',
         display: 'flex',
         flexDirection: 'column',
+        position: 'relative',
       }}
     >
+      {/* Animated Background */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 0,
+          pointerEvents: 'none',
+        }}
+      >
+        {/* Primary flickering grid */}
+        <FlickeringGrid
+          color="rgb(0, 239, 139)"
+          maxOpacity={0.15}
+          flickerChance={0.25}
+          squareSize={3}
+          gridGap={5}
+          className="absolute inset-0"
+        />
+        
+        {/* Secondary subtle grid layer */}
+        <FlickeringGrid
+          color="rgb(0, 239, 139)"
+          maxOpacity={0.08}
+          flickerChance={0.15}
+          squareSize={6}
+          gridGap={9}
+          className="absolute inset-0 opacity-50"
+        />
+        
+        {/* Gradient overlay for depth */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(to bottom, rgba(10, 10, 10, 0.3) 0%, rgba(10, 10, 10, 0.8) 100%)',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+
+      {/* Content wrapper with z-index */}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+        }}
+      >
       {/* Header */}
       <header
         style={{
@@ -181,15 +236,6 @@ export default function Home() {
             gap: '8px',
           }}
         >
-          <span
-            style={{
-              fontSize: 'clamp(24px, 5vw, 32px)',
-            }}
-            role="img"
-            aria-label="Rock Paper Scissors"
-          >
-            🪨📄✂️
-          </span>
           <h1
             style={{
               fontSize: 'clamp(18px, 4vw, 24px)',
@@ -215,55 +261,70 @@ export default function Home() {
         style={{
           flex: 1,
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          padding: 'clamp(16px, 4vw, 32px) clamp(12px, 3vw, 24px)',
-          gap: 'clamp(16px, 4vw, 32px)',
+          flexDirection: 'row',
+          padding: 'clamp(16px, 2vw, 24px)',
+          gap: 'clamp(16px, 2vw, 24px)',
+          maxWidth: '1600px',
+          margin: '0 auto',
+          width: '100%',
         }}
       >
-        {/* Game Description */}
+        {/* Left Side - Game Arena */}
         <div
           style={{
-            textAlign: 'center',
-            maxWidth: '600px',
-            padding: '0 12px',
-          }}
-        >
-          <h2
-            style={{
-              fontSize: 'clamp(16px, 3.5vw, 20px)',
-              fontWeight: '600',
-              color: 'var(--foreground)',
-              marginBottom: '8px',
-            }}
-          >
-            Predict the Last One Standing
-          </h2>
-          <p
-            style={{
-              fontSize: 'clamp(12px, 2.5vw, 14px)',
-              color: 'var(--foreground-secondary)',
-              margin: 0,
-            }}
-          >
-            Watch Rock, Paper, and Scissors battle it out in a physics simulation.
-            Bet on which type will be the last one remaining!
-          </p>
-        </div>
-
-        {/* Game Area */}
-        <div
-          style={{
+            flex: '1 1 60%',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            gap: 'clamp(16px, 3vw, 24px)',
-            width: '100%',
-            maxWidth: '900px',
+            gap: 'clamp(12px, 2vw, 16px)',
+            minWidth: 0,
           }}
         >
-          {/* Arena */}
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+          {/* Game Description */}
+          <div
+            style={{
+              backgroundColor: 'var(--background-surface)',
+              borderRadius: '12px',
+              padding: 'clamp(14px, 2vw, 18px) clamp(16px, 2vw, 20px)',
+              border: '1px solid var(--border-default)',
+            }}
+          >
+            <h2
+              style={{
+                fontSize: 'clamp(15px, 2.5vw, 18px)',
+                fontWeight: '600',
+                color: FLOW_GREEN,
+                marginBottom: '6px',
+                margin: 0,
+              }}
+            >
+              Battle Arena
+            </h2>
+            <p
+              style={{
+                fontSize: 'clamp(11px, 1.8vw, 13px)',
+                color: 'var(--foreground-secondary)',
+                margin: 0,
+                marginTop: '6px',
+              }}
+            >
+              Real-time physics simulation
+            </p>
+          </div>
+
+          {/* Arena Container */}
+          <div
+            style={{
+              flex: 1,
+              backgroundColor: 'var(--background-surface)',
+              borderRadius: '12px',
+              padding: 0,
+              border: '1px solid var(--border-default)',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: '500px',
+              overflow: 'hidden',
+            }}
+          >
             <Arena
               objects={simulation.objects}
               width={ARENA_WIDTH}
@@ -271,9 +332,70 @@ export default function Home() {
               showCounts={isSimulationRunning || simulation.objects.length > 0}
               collisionEvents={simulation.collisionEvents}
             />
+
+            {/* Simulation Status */}
+            {isSimulationRunning && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  padding: '12px 16px',
+                  backgroundColor: 'rgba(0, 239, 139, 0.05)',
+                  borderTop: `1px solid ${FLOW_GREEN}`,
+                }}
+              >
+                <div
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: FLOW_GREEN,
+                    animation: 'pulse 2s ease-in-out infinite',
+                  }}
+                />
+                <span
+                  style={{
+                    color: FLOW_GREEN,
+                    fontSize: 'clamp(13px, 2vw, 15px)',
+                    fontWeight: '600',
+                  }}
+                >
+                  Simulation Running
+                </span>
+                <span
+                  style={{
+                    color: 'var(--foreground-secondary)',
+                    fontSize: 'clamp(12px, 1.8vw, 14px)',
+                  }}
+                >
+                  • Your bet: {gameStore.game.prediction?.toUpperCase()}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Betting Panel - Only show when not simulating */}
+          {/* Error Display */}
+          {error && (
+            <ErrorDisplay
+              error={error}
+              onDismiss={handleDismissError}
+              showRetry={!!isStuckError}
+              onRetry={isStuckError ? handleResetGame : undefined}
+            />
+          )}
+        </div>
+
+        {/* Right Side - Betting Panel */}
+        <div
+          style={{
+            flex: '0 0 auto',
+            width: 'clamp(320px, 35vw, 420px)',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
           {!isSimulationRunning && !showResult && (
             <BettingPanel
               onPlaceBet={handlePlaceBet}
@@ -286,55 +408,54 @@ export default function Home() {
             />
           )}
 
-          {/* Simulation Status */}
-          {isSimulationRunning && (
+          {(isSimulationRunning || showResult) && (
             <div
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '8px',
-                padding: 'clamp(12px, 2vw, 16px) clamp(16px, 3vw, 24px)',
                 backgroundColor: 'var(--background-surface)',
-                borderRadius: '8px',
-                border: `1px solid ${FLOW_GREEN}`,
-                width: '100%',
-                maxWidth: '400px',
+                borderRadius: '12px',
+                padding: 'clamp(20px, 3vw, 24px)',
+                border: '1px solid var(--border-default)',
               }}
             >
-              <span
+              <h3
                 style={{
                   color: FLOW_GREEN,
-                  fontSize: 'clamp(14px, 2.5vw, 16px)',
+                  fontSize: 'clamp(16px, 2.5vw, 18px)',
                   fontWeight: '600',
-                  textAlign: 'center',
+                  marginBottom: '16px',
+                  margin: 0,
                 }}
               >
-                Simulation Running...
-              </span>
-              <span
+                Game in Progress
+              </h3>
+              <p
                 style={{
                   color: 'var(--foreground-secondary)',
-                  fontSize: 'clamp(12px, 2vw, 14px)',
-                  textAlign: 'center',
+                  fontSize: 'clamp(13px, 2vw, 14px)',
+                  margin: 0,
+                  marginTop: '12px',
                 }}
               >
-                Your prediction: {gameStore.game.prediction?.toUpperCase() ?? 'None'}
-              </span>
+                Watch the simulation to see if your prediction wins!
+              </p>
             </div>
           )}
         </div>
-
-        {/* Error Display */}
-        {error && (
-          <ErrorDisplay
-            error={error}
-            onDismiss={handleDismissError}
-            showRetry={!!isStuckError}
-            onRetry={isStuckError ? handleResetGame : undefined}
-          />
-        )}
       </main>
+
+      {/* Mobile Layout - Stack vertically on small screens */}
+      <style>{`
+        @media (max-width: 1024px) {
+          main {
+            flex-direction: column !important;
+          }
+          main > div:last-child {
+            width: 100% !important;
+            max-width: 500px !important;
+            margin: 0 auto !important;
+          }
+        }
+      `}</style>
 
       {/* Footer */}
       <footer
@@ -392,6 +513,7 @@ export default function Home() {
           settleTxId={gameStore.game.settleTransactionId}
         />
       )}
+      </div>
     </div>
   );
 }
