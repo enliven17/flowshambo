@@ -216,9 +216,6 @@ export default function Home() {
                   <h2 className="text-xl font-bold text-flow-green mb-1 flex items-center gap-2">
                     Battle Arena <span className="text-xs bg-flow-green/10 text-flow-green px-2 py-0.5 rounded-full border border-flow-green/30">LIVE</span>
                   </h2>
-                  <p className="text-sm text-zinc-400">
-                    Physics-based simulation on Flow Blockchain.
-                  </p>
                 </div>
                 {/* Status Indicator */}
                 <div className="flex flex-col items-end">
