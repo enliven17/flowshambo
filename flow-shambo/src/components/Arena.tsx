@@ -294,15 +294,10 @@ export function Arena({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Track active flash effects with their progress
-  const [activeFlashes, setActiveFlashes] = useState<ActiveFlash[]>([]);
-
-  // Track transformation progress for each transforming object
-  const [transformProgress, setTransformProgress] = useState<Map<string, number>>(new Map());
-
-  // Animation frame ref for flash effects
-  const flashAnimationRef = useRef<number | null>(null);
-  const lastFlashTimeRef = useRef<number>(0);
+  // Use Refs for transient animation state to avoid React re-renders
+  const activeFlashesRef = useRef<ActiveFlash[]>([]);
+  const transformProgressRef = useRef<Map<string, number>>(new Map());
+  const lastRenderTimeRef = useRef<number>(0);
 
   // Responsive scaling
   const [scale, setScale] = useState(1);
@@ -347,87 +342,37 @@ export function Arena({
 
   /**
    * Process new collision events: flash effects + audio
+   * Directly updates refs to avoid re-renders
    */
   useEffect(() => {
     if (collisionEvents.length === 0) return;
 
-    // Play "clink" sound for each collision frame (debounced per frame naturally)
-    // Only play if there are actual collisions
+    // Play "clink" sound
     if (collisionEvents.length > 0) {
-      audioSynth.resume().catch(() => { }); // Ensure context is running
+      audioSynth.resume().catch(() => { });
       audioSynth.playClink();
     }
 
-    // Add new collision events as active flashes
+    // Add new collision events to ref
     const newFlashes: ActiveFlash[] = collisionEvents.map(event => ({
       event,
       progress: 0
     }));
 
-    setActiveFlashes(prev => [...prev, ...newFlashes]);
+    activeFlashesRef.current.push(...newFlashes);
 
-    // Initialize transformation progress for transformed objects
-    const newTransformProgress = new Map(transformProgress);
+    // Initialize transformation progress
     for (const event of collisionEvents) {
       if (event.hasTransformation && event.transformedObjectId) {
-        newTransformProgress.set(event.transformedObjectId, 0);
+        transformProgressRef.current.set(event.transformedObjectId, 0);
       }
     }
-    setTransformProgress(newTransformProgress);
   }, [collisionEvents]);
 
   /**
-   * Animate flash effects
-   */
-  useEffect(() => {
-    if (activeFlashes.length === 0 && transformProgress.size === 0) {
-      return;
-    }
-
-    const animateFlashes = (currentTime: number) => {
-      const deltaTime = lastFlashTimeRef.current === 0
-        ? 16
-        : currentTime - lastFlashTimeRef.current;
-      lastFlashTimeRef.current = currentTime;
-
-      // Update flash progress
-      setActiveFlashes(prev => {
-        const updated = prev.map(flash => ({
-          ...flash,
-          progress: flash.progress + (deltaTime / FLASH_DURATION_MS)
-        })).filter(flash => flash.progress < 1);
-        return updated;
-      });
-
-      // Update transformation progress
-      setTransformProgress(prev => {
-        const updated = new Map(prev);
-        for (const [id, progress] of updated) {
-          const newProgress = progress + (deltaTime / TRANSFORMATION_DURATION_MS);
-          if (newProgress >= 1) {
-            updated.delete(id);
-          } else {
-            updated.set(id, newProgress);
-          }
-        }
-        return updated;
-      });
-
-      flashAnimationRef.current = requestAnimationFrame(animateFlashes);
-    };
-
-    flashAnimationRef.current = requestAnimationFrame(animateFlashes);
-
-    return () => {
-      if (flashAnimationRef.current !== null) {
-        cancelAnimationFrame(flashAnimationRef.current);
-        flashAnimationRef.current = null;
-      }
-    };
-  }, [activeFlashes.length > 0 || transformProgress.size > 0]);
-
-  /**
    * Renders all objects on the canvas
+   * This is called every time 'objects' or 'width/height' changes (via main prop update)
+   * It also advances animations based on delta time.
    */
   const render = useCallback(() => {
     const canvas = canvasRef.current;
@@ -436,18 +381,52 @@ export function Arena({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Time delta calculation
+    const now = performance.now();
+    // Initialize lastRenderTime if first run
+    if (lastRenderTimeRef.current === 0) {
+      lastRenderTimeRef.current = now;
+    }
+    const deltaTime = now - lastRenderTimeRef.current;
+    lastRenderTimeRef.current = now;
+
+    // 1. Advance Animations (Flash + Transform)
+
+    // Update flash progress
+    if (activeFlashesRef.current.length > 0) {
+      activeFlashesRef.current.forEach(flash => {
+        flash.progress += (deltaTime / FLASH_DURATION_MS);
+      });
+      // Remove finished flashes
+      activeFlashesRef.current = activeFlashesRef.current.filter(f => f.progress < 1);
+    }
+
+    // Update transformation progress
+    if (transformProgressRef.current.size > 0) {
+      for (const [id, progress] of transformProgressRef.current.entries()) {
+        const newProgress = progress + (deltaTime / TRANSFORMATION_DURATION_MS);
+        if (newProgress >= 1) {
+          transformProgressRef.current.delete(id);
+        } else {
+          transformProgressRef.current.set(id, newProgress);
+        }
+      }
+    }
+
+    // 2. Clear and Draw
+
     // Clear and draw arena boundaries
     drawArenaBoundaries(ctx, width, height);
 
     // Draw all objects
     for (const obj of objects) {
-      const isTransforming = transformingObjectIds.has(obj.id) || transformProgress.has(obj.id);
-      const progress = transformProgress.get(obj.id) ?? 0;
+      const isTransforming = transformingObjectIds.has(obj.id) || transformProgressRef.current.has(obj.id);
+      const progress = transformProgressRef.current.get(obj.id) ?? 0;
       drawObject(ctx, obj, isTransforming, progress);
     }
 
     // Draw collision flash effects on top
-    for (const flash of activeFlashes) {
+    for (const flash of activeFlashesRef.current) {
       drawCollisionFlash(
         ctx,
         flash.event.x,
@@ -456,9 +435,9 @@ export function Arena({
         flash.event.hasTransformation
       );
     }
-  }, [objects, width, height, activeFlashes, transformProgress, transformingObjectIds]);
+  }, [objects, width, height, transformingObjectIds]);
 
-  // Render on mount and when objects/effects change
+  // Render on prop updates (drives the loop)
   useEffect(() => {
     render();
   }, [render]);

@@ -201,10 +201,8 @@ export function useSimulation(): UseSimulationResult {
     // Cap delta time to prevent large jumps (e.g., when tab is inactive)
     const cappedDeltaTime = Math.min(deltaTime, FRAME_DURATION_MS * 3 / 1000);
 
-    // Slight slow-motion factor for "softer" feel
-    // Scaling time by 0.7 makes everything move at 70% speed, feeling heavier/softer
-    const timeScale = 0.7;
-    engineRef.current.step(cappedDeltaTime * timeScale);
+    // Restore normal speed (1.0)
+    engineRef.current.step(cappedDeltaTime);
 
     // Update collision events state with events from this frame
     if (frameCollisionEventsRef.current.length > 0) {
