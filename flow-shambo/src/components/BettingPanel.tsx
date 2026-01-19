@@ -18,17 +18,34 @@ export interface BettingPanelProps {
   onResetGame?: () => void;
 }
 
+// SVG Icons for game objects (unused currently, using game-consistent styling)
+
 interface ObjectTypeConfig {
   type: ObjectType;
   label: string;
-  emoji: string;
+  icon: string;
+  color: string;
 }
 
-// Updated to use letters instead of emojis
 const OBJECT_TYPES: ObjectTypeConfig[] = [
-  { type: 'rock', label: 'Rock', emoji: 'R' },
-  { type: 'paper', label: 'Paper', emoji: 'P' },
-  { type: 'scissors', label: 'Scissors', emoji: 'S' },
+  {
+    type: 'rock',
+    label: 'Rock',
+    icon: '✊',
+    color: '#FF6B6B'
+  },
+  {
+    type: 'paper',
+    label: 'Paper',
+    icon: '✋',
+    color: '#4CC9F0'
+  },
+  {
+    type: 'scissors',
+    label: 'Scissors',
+    icon: '✌️',
+    color: '#FCC719'
+  },
 ];
 
 export function BettingPanel({
@@ -110,18 +127,37 @@ export function BettingPanel({
       <div className="mb-6">
         <label className="block text-sm font-semibold text-zinc-300 mb-3">Your Move</label>
         <div className="grid grid-cols-3 gap-3">
-          {OBJECT_TYPES.map(({ type, label, emoji }) => {
+          {OBJECT_TYPES.map(({ type, label, icon, color }) => {
             const isSelected = selectedPrediction === type;
             return (
               <button
                 key={type}
                 onClick={() => handlePredictionSelect(type)}
                 disabled={disabled || isLoading}
-                className={`relative group flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${isSelected ? 'border-flow-green bg-flow-green/20 shadow-[0_0_20px_rgba(0,239,139,0.2)] scale-105 z-10' : 'border-zinc-700 bg-zinc-800/50 hover:border-zinc-500 hover:bg-zinc-800'} ${(disabled || isLoading) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                className={`relative group flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${isSelected ? 'bg-white/5 scale-105 z-10' : 'border-zinc-700 bg-zinc-800/50 hover:border-zinc-500 hover:bg-zinc-800'} ${(disabled || isLoading) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                style={{
+                  borderColor: isSelected ? color : undefined,
+                  boxShadow: isSelected ? `0 0 20px ${color}40` : undefined
+                }}
               >
-                <span className="text-2xl font-black font-mono transform transition-transform group-hover:scale-110 duration-200">{emoji}</span>
-                <span className={`text-xs font-bold uppercase tracking-wider ${isSelected ? 'text-flow-green' : 'text-zinc-400'}`}>{label}</span>
-                {isSelected && <div className="absolute inset-0 rounded-xl ring-2 ring-flow-green ring-opacity-50 animate-pulse pointer-events-none" />}
+                <div
+                  className="rounded-full w-12 h-12 flex items-center justify-center transition-transform group-hover:scale-110 duration-200 border-2"
+                  style={{
+                    backgroundColor: color,
+                    borderColor: isSelected ? '#fff' : 'rgba(0,0,0,0.2)'
+                  }}
+                >
+                  <span className="text-2xl filter grayscale brightness-200 drop-shadow-md">{icon}</span>
+                </div>
+
+                <span
+                  className={`text-xs font-bold uppercase tracking-wider transition-colors`}
+                  style={{ color: isSelected ? color : '#a1a1aa' }}
+                >
+                  {label}
+                </span>
+
+                {isSelected && <div className="absolute inset-0 rounded-xl border-2 animate-pulse pointer-events-none" style={{ borderColor: color, opacity: 0.5 }} />}
               </button>
             );
           })}

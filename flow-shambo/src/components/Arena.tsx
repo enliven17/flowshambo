@@ -58,9 +58,9 @@ export const TRANSFORMATION_DURATION_MS = 300;
  * Object colors by type
  */
 const OBJECT_COLORS: Record<ObjectType, string> = {
-  rock: '#8B7355',      // Brown/gray for rock
-  paper: '#E5E5E5',     // Light gray for paper (better visibility on dark)
-  scissors: '#C0C0C0',  // Silver for scissors
+  rock: '#FF6B6B',      // Red-ish for Rock (Aggressive)
+  paper: '#4CC9F0',     // Bright Cyan/Blue for Paper (Calm)
+  scissors: '#FCC719',  // Yellow/Gold for Scissors (Sharp)
 };
 
 /**
