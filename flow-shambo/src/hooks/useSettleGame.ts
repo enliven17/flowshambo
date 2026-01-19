@@ -15,8 +15,9 @@
 import { useCallback, useState } from 'react';
 import * as fcl from '@onflow/fcl';
 import { useGameStore } from '../stores/gameStore';
-import { calculatePayout, PAYOUT_MULTIPLIER } from '../lib/betting/settlement';
+import { calculatePayout } from '../lib/betting/settlement';
 import type { ObjectType } from '../types';
+import { supabase } from '../lib/supabase/client';
 
 /**
  * Maps ObjectType to Cadence UInt8 value
@@ -263,6 +264,36 @@ export function useSettleGame(): UseSettleGameResult {
 
         setIsSettling(false);
         setLoading(false);
+
+        // Log game to Supabase
+        try {
+          const user = await fcl.currentUser.snapshot();
+          if (user?.addr) {
+            const gameData = {
+              player_address: user.addr,
+              bet_amount: betAmount || 0,
+              prediction: prediction || 'unknown',
+              winner: winningType,
+              payout: result.payout,
+              transaction_id: txId,
+              status: 'completed'
+            };
+            
+            console.log('Saving game to Supabase:', gameData);
+            
+            const { data, error } = await supabase.from('games').insert(gameData);
+            
+            if (error) {
+              console.error('Supabase insert error:', error);
+            } else {
+              console.log('Game saved successfully:', data);
+            }
+          } else {
+            console.warn('No user address found, skipping Supabase save');
+          }
+        } catch (sbErr) {
+          console.error('Failed to log to Supabase:', sbErr);
+        }
 
         return result;
       } catch (err) {

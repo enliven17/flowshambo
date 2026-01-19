@@ -28,6 +28,8 @@ import { useRevealGame } from '../hooks/useRevealGame';
 import { useSettleGame } from '../hooks/useSettleGame';
 import { useSimulation } from '../hooks/useSimulation';
 import { useClearReceipt } from '../hooks/useClearReceipt';
+import { GameHistory } from '../components/GameHistory';
+
 import { FlickeringGrid } from '../components/FlickeringGrid';
 import type { ObjectType, LoadingType } from '../types';
 
@@ -101,14 +103,25 @@ export default function Home() {
 
   // Handle simulation completion
   useEffect(() => {
+    console.log('🔍 Simulation check:', {
+      status: simulation.status,
+      winner: simulation.winner,
+      showResult
+    });
+
     const isComplete = simulation.status === 'completed' || simulation.status === 'timeout';
     if (isComplete && simulation.winner && !showResult) {
+      console.log('🎯 Simulation complete! Calling settleGame with winner:', simulation.winner);
+      
       const settle = async () => {
         setLoadingType('settling-game');
         try {
-          await settleGame.settleGame(simulation.winner!);
+          console.log('📤 Calling settleGame...');
+          const result = await settleGame.settleGame(simulation.winner!);
+          console.log('✅ Settlement complete:', result);
           setShowResult(true);
         } catch (err) {
+          console.error('❌ Settlement failed:', err);
           setError(err instanceof Error ? err.message : 'Failed to settle game');
         } finally {
           setLoadingType(null);
@@ -276,6 +289,7 @@ export default function Home() {
                 </div>
               </div>
             )}
+            <GameHistory />
           </div>
 
         </main>
@@ -284,7 +298,7 @@ export default function Home() {
         <footer className="mt-auto py-8 border-t border-white/5 glass-strong">
           <div className="max-w-7xl mx-auto px-4 text-center">
             <p className="text-sm text-zinc-500">
-              Built on <a href="https://flow.com" target="_blank" rel="noopener noreferrer" className="text-flow-green hover:text-white transition-colors font-medium">Flow Blockchain</a> • Testnet Only
+              Built on <a href="https://flow.com" target="_blank" rel="noopener noreferrer" className="text-flow-green hover:text-white transition-colors font-medium">Flow blockchain</a> • Testnet Only
             </p>
           </div>
         </footer>
