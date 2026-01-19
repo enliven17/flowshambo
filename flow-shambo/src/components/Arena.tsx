@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useCallback, useState } from 'react';
 import type { GameObject, ObjectType, CollisionEvent } from '../types/game';
+import { audioSynth } from '../lib/audio/synth';
 
 /**
  * Props for the Arena component
@@ -31,12 +32,12 @@ const FLOW_GREEN = '#00EF8B';
 /**
  * Arena background color (dark)
  */
-const ARENA_BACKGROUND = '#1a1a1a';
+const ARENA_BACKGROUND = '#050505';
 
 /**
  * Arena border color
  */
-const ARENA_BORDER = FLOW_GREEN;
+const ARENA_BORDER = 'rgba(0, 239, 139, 0.3)';
 
 /**
  * Flash effect color (bright white)
@@ -58,7 +59,7 @@ export const TRANSFORMATION_DURATION_MS = 300;
  */
 const OBJECT_COLORS: Record<ObjectType, string> = {
   rock: '#8B7355',      // Brown/gray for rock
-  paper: '#F5F5DC',     // Cream/white for paper
+  paper: '#E5E5E5',     // Light gray for paper (better visibility on dark)
   scissors: '#C0C0C0',  // Silver for scissors
 };
 
@@ -66,9 +67,9 @@ const OBJECT_COLORS: Record<ObjectType, string> = {
  * Object emojis by type for visual distinction
  */
 const OBJECT_EMOJIS: Record<ObjectType, string> = {
-  rock: '🪨',
-  paper: '📄',
-  scissors: '✂️',
+  rock: '✊',
+  paper: '✋',
+  scissors: '✌️',
 };
 
 /**
@@ -77,16 +78,9 @@ const OBJECT_EMOJIS: Record<ObjectType, string> = {
 const DEFAULT_WIDTH = 800;
 const DEFAULT_HEIGHT = 600;
 
-/**
- * Draws a single game object on the canvas
- * 
- * @param ctx - Canvas 2D rendering context
- * @param obj - Game object to draw
- * @param isTransforming - Whether the object is currently transforming (for animation)
- * @param transformProgress - Progress of transformation animation (0-1)
- */
 function drawObject(
-  ctx: CanvasRenderingContext2D, 
+  //... (rest of function as before)
+  ctx: CanvasRenderingContext2D,
   obj: GameObject,
   isTransforming: boolean = false,
   transformProgress: number = 0
@@ -96,26 +90,31 @@ function drawObject(
   const emoji = OBJECT_EMOJIS[type];
 
   // Calculate scale for transformation animation (pulse effect)
-  // Scale goes from 1.0 -> 1.4 -> 1.0 during transformation
   let scale = 1.0;
   if (isTransforming) {
-    // Use sine wave for smooth pulse: 0->1->0 maps to 1.0->1.4->1.0
     scale = 1.0 + 0.4 * Math.sin(transformProgress * Math.PI);
   }
 
   const scaledRadius = radius * scale;
 
-  // Save context for transformation
   ctx.save();
 
-  // Draw circle background
+  // Draw circle background with specific styling
   ctx.beginPath();
   ctx.arc(x, y, scaledRadius, 0, Math.PI * 2);
   ctx.fillStyle = color;
+
+  // Add shadow for depth
+  ctx.shadowColor = isTransforming ? FLOW_GREEN : 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = isTransforming ? 20 : 10;
+
   ctx.fill();
-  
+
+  // Reset shadow for border
+  ctx.shadowBlur = 0;
+
   // Draw border (thicker during transformation)
-  ctx.strokeStyle = isTransforming ? FLOW_GREEN : '#000000';
+  ctx.strokeStyle = isTransforming ? FLOW_GREEN : 'rgba(255,255,255,0.2)';
   ctx.lineWidth = isTransforming ? 4 : 2;
   ctx.stroke();
 
@@ -130,13 +129,19 @@ function drawObject(
     ctx.globalAlpha = 1.0;
   }
 
-  // Draw emoji in center (scaled)
-  const fontSize = scaledRadius;
+  // Draw hand emoji (Monochrome style)
+  const fontSize = scaledRadius * 1.2; // Slightly larger for visibility
   ctx.font = `${fontSize}px Arial`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#000000';
-  ctx.fillText(emoji, x, y);
+
+  // Filter to make emoji look like a white/flat icon
+  // grayscale(100%) removes color
+  // brightness(500%) makes it white/very bright
+  // drop-shadow gives it 3D pop
+  ctx.filter = 'grayscale(100%) brightness(500%) drop-shadow(0 2px 2px rgba(0,0,0,0.5))';
+
+  ctx.fillText(emoji, x, y + radius * 0.1); // Slight y offset for visual centering
 
   ctx.restore();
 }
@@ -193,27 +198,27 @@ function drawCollisionFlash(
 ): void {
   // Flash fades out as progress increases
   const alpha = 1.0 - progress;
-  
+
   // Flash expands as it fades
   const baseRadius = 20;
   const maxExpansion = hasTransformation ? 40 : 25;
   const radius = baseRadius + (maxExpansion * progress);
 
   ctx.save();
-  
+
   // Draw outer glow
   const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
   const flashColor = hasTransformation ? FLOW_GREEN : FLASH_COLOR;
   gradient.addColorStop(0, flashColor);
   gradient.addColorStop(0.5, `${flashColor}80`); // 50% opacity
   gradient.addColorStop(1, `${flashColor}00`); // 0% opacity
-  
+
   ctx.globalAlpha = alpha;
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, Math.PI * 2);
   ctx.fillStyle = gradient;
   ctx.fill();
-  
+
   // Draw inner bright spot for transformation
   if (hasTransformation) {
     ctx.beginPath();
@@ -222,7 +227,7 @@ function drawCollisionFlash(
     ctx.globalAlpha = alpha * 0.8;
     ctx.fill();
   }
-  
+
   ctx.restore();
 }
 
@@ -288,17 +293,17 @@ export function Arena({
 }: ArenaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // Track active flash effects with their progress
   const [activeFlashes, setActiveFlashes] = useState<ActiveFlash[]>([]);
-  
+
   // Track transformation progress for each transforming object
   const [transformProgress, setTransformProgress] = useState<Map<string, number>>(new Map());
-  
+
   // Animation frame ref for flash effects
   const flashAnimationRef = useRef<number | null>(null);
   const lastFlashTimeRef = useRef<number>(0);
-  
+
   // Responsive scaling
   const [scale, setScale] = useState(1);
   const [displayWidth, setDisplayWidth] = useState(width);
@@ -314,12 +319,12 @@ export function Arena({
 
       const containerWidth = container.clientWidth;
       const containerHeight = container.clientHeight;
-      
+
       // Calculate scale to fit container while maintaining aspect ratio
       const scaleX = containerWidth / width;
       const scaleY = containerHeight / height;
       const newScale = Math.min(scaleX, scaleY);
-      
+
       setScale(newScale);
       setDisplayWidth(width * newScale);
       setDisplayHeight(height * newScale);
@@ -327,13 +332,13 @@ export function Arena({
 
     updateScale();
     window.addEventListener('resize', updateScale);
-    
+
     // Use ResizeObserver for container size changes
     const resizeObserver = new ResizeObserver(updateScale);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
-    
+
     return () => {
       window.removeEventListener('resize', updateScale);
       resizeObserver.disconnect();
@@ -341,19 +346,26 @@ export function Arena({
   }, [width, height]);
 
   /**
-   * Process new collision events and create flash effects
+   * Process new collision events: flash effects + audio
    */
   useEffect(() => {
     if (collisionEvents.length === 0) return;
-    
+
+    // Play "clink" sound for each collision frame (debounced per frame naturally)
+    // Only play if there are actual collisions
+    if (collisionEvents.length > 0) {
+      audioSynth.resume().catch(() => { }); // Ensure context is running
+      audioSynth.playClink();
+    }
+
     // Add new collision events as active flashes
     const newFlashes: ActiveFlash[] = collisionEvents.map(event => ({
       event,
       progress: 0
     }));
-    
+
     setActiveFlashes(prev => [...prev, ...newFlashes]);
-    
+
     // Initialize transformation progress for transformed objects
     const newTransformProgress = new Map(transformProgress);
     for (const event of collisionEvents) {
@@ -373,8 +385,8 @@ export function Arena({
     }
 
     const animateFlashes = (currentTime: number) => {
-      const deltaTime = lastFlashTimeRef.current === 0 
-        ? 16 
+      const deltaTime = lastFlashTimeRef.current === 0
+        ? 16
         : currentTime - lastFlashTimeRef.current;
       lastFlashTimeRef.current = currentTime;
 
@@ -469,72 +481,41 @@ export function Arena({
   return (
     <div
       ref={containerRef}
-      className={`arena-container ${className}`}
-      style={{
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: ARENA_BACKGROUND,
-        borderRadius: '12px',
-        overflow: 'hidden',
-        width: '100%',
-        height: '100%',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
-      }}
+      className={`glass-card relative flex flex-col w-full h-full bg-black/60 rounded-2xl overflow-hidden shadow-2xl ${className}`}
       data-testid="arena-container"
     >
       {/* Object Counts - Compact Top Bar */}
       {showCounts && counts && (
         <div
-          className="arena-counts"
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '8px 16px',
-            backgroundColor: 'rgba(0, 0, 0, 0.9)',
-            borderBottom: `1px solid ${FLOW_GREEN}`,
-            gap: '20px',
-            flexShrink: 0,
-            fontSize: '14px',
-            fontWeight: '600',
-          }}
+          className="flex justify-center items-center py-2 px-4 bg-black/80 border-b border-white/10 gap-5 text-sm font-bold backdrop-blur-sm z-10"
           data-testid="arena-counts"
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: OBJECT_COLORS.rock }} />
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: OBJECT_COLORS.rock }} />
             <span style={{ color: OBJECT_COLORS.rock }}>R</span>
-            <span style={{ color: '#fff', minWidth: '16px', textAlign: 'center' }}>{counts.rock}</span>
+            <span className="text-white min-w-[16px] text-center">{counts.rock}</span>
           </div>
-          
-          <div style={{ width: '1px', height: '16px', backgroundColor: 'rgba(255,255,255,0.2)' }} />
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: OBJECT_COLORS.paper }} />
+
+          <div className="w-px h-4 bg-white/20" />
+
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: OBJECT_COLORS.paper }} />
             <span style={{ color: OBJECT_COLORS.paper }}>P</span>
-            <span style={{ color: '#fff', minWidth: '16px', textAlign: 'center' }}>{counts.paper}</span>
+            <span className="text-white min-w-[16px] text-center">{counts.paper}</span>
           </div>
-          
-          <div style={{ width: '1px', height: '16px', backgroundColor: 'rgba(255,255,255,0.2)' }} />
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: OBJECT_COLORS.scissors }} />
+
+          <div className="w-px h-4 bg-white/20" />
+
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: OBJECT_COLORS.scissors }} />
             <span style={{ color: OBJECT_COLORS.scissors }}>S</span>
-            <span style={{ color: '#fff', minWidth: '16px', textAlign: 'center' }}>{counts.scissors}</span>
+            <span className="text-white min-w-[16px] text-center">{counts.scissors}</span>
           </div>
         </div>
       )}
 
       {/* Canvas - Fills remaining space */}
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: 0,
-        }}
-      >
+      <div className="flex-1 flex items-center justify-center min-h-0 relative">
         <canvas
           ref={canvasRef}
           width={width}
@@ -557,10 +538,10 @@ export function Arena({
 export default Arena;
 
 // Export constants for testing
-export { 
-  OBJECT_COLORS, 
-  OBJECT_EMOJIS, 
-  FLOW_GREEN, 
+export {
+  OBJECT_COLORS,
+  OBJECT_EMOJIS,
+  FLOW_GREEN,
   ARENA_BACKGROUND,
   FLASH_COLOR
 };

@@ -207,7 +207,8 @@ export function useSimulation(): UseSimulationResult {
       setCollisionEvents([...frameCollisionEventsRef.current]);
     } else {
       // Clear collision events if none occurred this frame
-      setCollisionEvents([]);
+      // Optimization: Only update state if it wasn't already empty to prevent re-renders
+      setCollisionEvents(prev => prev.length > 0 ? [] : prev);
     }
 
     // Update objects state for rendering

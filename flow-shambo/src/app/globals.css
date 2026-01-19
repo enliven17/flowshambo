@@ -1,375 +1,170 @@
 @import "tailwindcss";
 
 /* 
- * FlowShambo Global Styles
+ * FlowShambo Global Styles - Modernized
  * 
- * Flow Brand Colors:
- * - Primary (Flow Green): #00EF8B
- * - Background: #0a0a0a (dark)
- * - Surface: #1a1a1a (cards, panels)
- * - Text Primary: #ffffff
- * - Text Secondary: #888888
- * - Error: #ff6b6b
- * - Success: #00EF8B (same as primary)
- * 
- * Design Principles:
- * - No gradients - solid colors only
- * - Clean, minimal design
- * - High contrast for accessibility
- * 
- * Requirements: 7.1, 7.2
+ * Design Language:
+ * - "Cyberpunk Clean": Dark background, neon green accents, glassmorphism.
+ * - Premium feel with smooth transitions and subtle glows.
  */
 
 :root {
-  /* Flow Brand Colors */
+  /* Flow Brand Colors - Neon & Vibrant */
   --flow-green: #00EF8B;
   --flow-green-hover: #00D67D;
-  --flow-green-light: rgba(0, 239, 139, 0.1);
-  --flow-green-medium: rgba(0, 239, 139, 0.2);
-  
-  /* Background Colors */
-  --background: #0a0a0a;
-  --background-surface: #1a1a1a;
-  --background-elevated: #242424;
-  
+  --flow-green-glow: rgba(0, 239, 139, 0.6);
+  --flow-green-dim: rgba(0, 239, 139, 0.1);
+
+  /* Background Colors - Deep & Rich */
+  --background: #050505;
+  /* Deeper black */
+  --background-surface: rgba(26, 26, 26, 0.6);
+  /* Glassy surface */
+  --background-elevated: rgba(40, 40, 40, 0.6);
+
   /* Text Colors */
   --foreground: #ffffff;
-  --foreground-secondary: #888888;
-  --foreground-muted: #666666;
-  
+  --foreground-secondary: #a1a1aa;
+  /* Zinc-400 */
+  --foreground-muted: #71717a;
+  /* Zinc-500 */
+
   /* Status Colors */
-  --color-error: #ff6b6b;
-  --color-error-light: rgba(255, 107, 107, 0.1);
-  --color-warning: #FFC107;
-  --color-warning-light: rgba(255, 193, 7, 0.1);
-  --color-info: #00BFFF;
-  --color-info-light: rgba(0, 191, 255, 0.1);
-  --color-success: var(--flow-green);
-  --color-success-light: var(--flow-green-light);
-  
-  /* Border Colors */
-  --border-default: #333333;
-  --border-hover: var(--flow-green);
-  
-  /* Spacing */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 12px;
-  --spacing-lg: 16px;
-  --spacing-xl: 24px;
-  --spacing-2xl: 32px;
-  --spacing-3xl: 48px;
-  
-  /* Border Radius */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-success: #00EF8B;
+
+  /* Borders */
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-highlight: rgba(0, 239, 139, 0.3);
+
+  /* Radii */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
   --radius-full: 9999px;
-  
-  /* Shadows (subtle, no gradients) */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 20px rgba(0, 239, 139, 0.3);
-  
-  /* Transitions */
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.2s ease;
-  --transition-slow: 0.3s ease;
-  
-  /* Z-Index Scale */
-  --z-dropdown: 100;
-  --z-modal: 1000;
-  --z-overlay: 9999;
+
+  /* Shadows & Glows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --glow-sm: 0 0 10px rgba(0, 239, 139, 0.15);
+  --glow-md: 0 0 20px rgba(0, 239, 139, 0.25);
+  --glow-lg: 0 0 30px rgba(0, 239, 139, 0.35);
+  --glow-text: 0 0 10px rgba(0, 239, 139, 0.5);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: var(--flow-green);
+  --color-flow-green: var(--flow-green);
+  --color-flow-green-hover: var(--flow-green-hover);
+  --color-flow-green-dim: var(--flow-green-dim);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 /* Base Styles */
-* {
-  box-sizing: border-box;
-}
-
-html {
-  color-scheme: dark;
+html,
+body {
+  height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  line-height: 1.5;
+  font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
-  color: var(--foreground);
-  font-weight: 600;
-  line-height: 1.2;
+/* Glassmorphism Utilities */
+.glass {
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-h1 {
-  font-size: 2.5rem;
+.glass-card {
+  background: linear-gradient(145deg, rgba(30, 30, 30, 0.6) 0%, rgba(20, 20, 20, 0.4) 100%);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
-h2 {
-  font-size: 1.75rem;
+.glass-strong {
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-h3 {
-  font-size: 1.25rem;
+/* Typography Enhancements */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  letter-spacing: -0.02em;
 }
 
-/* Links */
-a {
-  color: var(--flow-green);
-  text-decoration: none;
-  transition: color var(--transition-fast);
-}
-
-a:hover {
-  color: var(--flow-green-hover);
-}
-
-/* Focus States (Accessibility) */
-:focus-visible {
-  outline: 2px solid var(--flow-green);
-  outline-offset: 2px;
-}
-
-/* Selection */
-::selection {
-  background: var(--flow-green);
-  color: #000000;
-}
-
-/* Scrollbar Styling */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--background);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-default);
-  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--foreground-muted);
-}
-
-/* Button Base Styles */
-button {
-  font-family: inherit;
-  cursor: pointer;
-  transition: all var(--transition-normal);
-}
-
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-/* Input Base Styles */
-input, textarea, select {
-  font-family: inherit;
-  background: var(--background);
-  color: var(--foreground);
-  border: 2px solid var(--border-default);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md) var(--spacing-lg);
-  transition: border-color var(--transition-fast);
-}
-
-input:focus, textarea:focus, select:focus {
-  border-color: var(--flow-green);
-  outline: none;
-}
-
-input::placeholder {
-  color: var(--foreground-muted);
-}
-
-/* Utility Classes */
-.flow-green {
-  color: var(--flow-green);
-}
-
-.bg-flow-green {
-  background-color: var(--flow-green);
-}
-
-.border-flow-green {
-  border-color: var(--flow-green);
-}
-
-.text-error {
-  color: var(--color-error);
-}
-
-.text-muted {
-  color: var(--foreground-secondary);
-}
-
-/* Card/Panel Base */
-.panel {
-  background: var(--background-surface);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
-}
-
-/* Primary Button */
-.btn-primary {
-  background-color: var(--flow-green);
-  color: #000000;
-  border: none;
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md) var(--spacing-xl);
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: var(--flow-green-hover);
-}
-
-.btn-primary:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-/* Secondary Button */
-.btn-secondary {
-  background-color: transparent;
-  color: var(--flow-green);
-  border: 2px solid var(--flow-green);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md) var(--spacing-xl);
-  font-weight: 500;
-  font-size: 1rem;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background-color: var(--flow-green-light);
-}
-
-/* Animations */
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Animation Utilities */
-.animate-spin {
-  animation: spin 1s linear infinite;
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
-.animate-pulse {
-  animation: pulse 2s ease-in-out infinite;
+.animate-float {
+  animation: float 4s ease-in-out infinite;
 }
 
-.animate-fade-in {
-  animation: fadeIn var(--transition-normal);
+.glow-hover {
+  transition: all 0.3s ease;
 }
 
-.animate-slide-up {
-  animation: slideUp var(--transition-slow);
+.glow-hover:hover {
+  box-shadow: var(--glow-md);
+  border-color: var(--flow-green);
 }
 
-.animate-scale-in {
-  animation: scaleIn var(--transition-normal);
+/* Neon Text */
+.text-neon {
+  color: var(--flow-green);
+  text-shadow: var(--glow-text);
 }
 
-/* Responsive Breakpoints */
-/* Mobile: < 640px */
-/* Tablet: 640px - 1024px */
-/* Desktop: > 1024px */
-
-@media (max-width: 640px) {
-  /* Typography adjustments for mobile */
-  h1 {
-    font-size: 1.75rem;
-  }
-  
-  h2 {
-    font-size: 1.25rem;
-  }
-  
-  h3 {
-    font-size: 1rem;
-  }
-  
-  /* Reduce spacing on mobile */
-  :root {
-    --spacing-xl: 16px;
-    --spacing-2xl: 24px;
-    --spacing-3xl: 32px;
-  }
-  
-  /* Smaller buttons on mobile */
-  .btn-primary, .btn-secondary {
-    padding: var(--spacing-sm) var(--spacing-lg);
-    font-size: 0.875rem;
-  }
-  
-  /* Panel adjustments */
-  .panel {
-    padding: var(--spacing-lg);
-  }
+/* Gradient Backgrounds */
+.bg-gradient-dark {
+  background: radial-gradient(circle at top right, rgba(0, 239, 139, 0.08), transparent 40%),
+    radial-gradient(circle at bottom left, rgba(0, 100, 255, 0.05), transparent 40%);
 }

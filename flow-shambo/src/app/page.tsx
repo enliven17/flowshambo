@@ -6,12 +6,11 @@
  * The main game interface for FlowShambo - a physics-based rock-paper-scissors
  * betting game on the Flow blockchain.
  * 
- * Layout:
- * - Header with logo and wallet connection
- * - Main content area with Arena and BettingPanel
- * - Overlays for loading states and results
- * 
- * Requirements: 7.1, 7.2, 7.3, 7.8
+ * Modernized UI:
+ * - Glassmorphism design
+ * - Sticky blurred navbar
+ * - Responsive grid layout
+ * - Enhanced typography
  */
 
 import { useState, useCallback, useEffect } from 'react';
@@ -32,14 +31,6 @@ import { useClearReceipt } from '../hooks/useClearReceipt';
 import { FlickeringGrid } from '../components/FlickeringGrid';
 import type { ObjectType, LoadingType } from '../types';
 
-/**
- * Flow green color constant
- */
-const FLOW_GREEN = '#00EF8B';
-
-/**
- * Arena dimensions
- */
 const ARENA_WIDTH = 800;
 const ARENA_HEIGHT = 500;
 
@@ -69,7 +60,7 @@ export default function Home() {
   // Handle clear receipt (reset game)
   const handleResetGame = useCallback(async () => {
     if (window.confirm('This will clear any stuck game in progress. Your bet will be lost if you force reset. Continue?')) {
-      setLoadingType('settling-game'); // reuse settling spinner or add new type
+      setLoadingType('settling-game');
       const success = await clearReceipt.clearReceipt();
       if (success) {
         setError(null);
@@ -89,19 +80,15 @@ export default function Home() {
     try {
       const result = await placeBet.placeBet(prediction, amount);
 
-      // If bet placement failed (returned null), stop here.
-      // The placeBet hook handles setting error state.
       if (!result) {
         setLoadingType(null);
         return;
       }
 
-      // After bet is placed, reveal the game
       setLoadingType('revealing-game');
       const initData = await revealGame.revealGame();
 
       if (initData) {
-        // Start simulation with the revealed objects
         simulation.start(initData);
         setLoadingType(null);
       }
@@ -116,7 +103,6 @@ export default function Home() {
   useEffect(() => {
     const isComplete = simulation.status === 'completed' || simulation.status === 'timeout';
     if (isComplete && simulation.winner && !showResult) {
-      // Settle the game
       const settle = async () => {
         setLoadingType('settling-game');
         try {
@@ -152,344 +138,159 @@ export default function Home() {
   );
 
   return (
-    <div
-      className="flow-shambo-app"
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--background)',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-      }}
-    >
-      {/* Animated Background */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: 0,
-          pointerEvents: 'none',
-        }}
-      >
-        {/* Primary flickering grid */}
+    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-x-hidden selection:bg-flow-green selection:text-black">
+
+      {/* Dynamic Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
         <FlickeringGrid
           color="rgb(0, 239, 139)"
-          maxOpacity={0.15}
-          flickerChance={0.25}
-          squareSize={3}
-          gridGap={5}
+          maxOpacity={0.12}
+          flickerChance={0.3}
+          squareSize={4}
+          gridGap={8}
           className="absolute inset-0"
         />
-        
-        {/* Secondary subtle grid layer */}
-        <FlickeringGrid
-          color="rgb(0, 239, 139)"
-          maxOpacity={0.08}
-          flickerChance={0.15}
-          squareSize={6}
-          gridGap={9}
-          className="absolute inset-0 opacity-50"
-        />
-        
-        {/* Gradient overlay for depth */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(to bottom, rgba(10, 10, 10, 0.3) 0%, rgba(10, 10, 10, 0.8) 100%)',
-            pointerEvents: 'none',
-          }}
-        />
+        <div className="absolute inset-0 bg-gradient-dark opacity-80" />
       </div>
 
-      {/* Content wrapper with z-index */}
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '100vh',
-        }}
-      >
-      {/* Header */}
-      <header
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '12px 16px',
-          borderBottom: '1px solid var(--border-default)',
-          backgroundColor: 'var(--background-surface)',
-          flexWrap: 'wrap',
-          gap: '12px',
-        }}
-      >
-        {/* Logo */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <h1
-            style={{
-              fontSize: 'clamp(18px, 4vw, 24px)',
-              fontWeight: '700',
-              color: FLOW_GREEN,
-              margin: 0,
-            }}
-          >
-            FlowShambo
-          </h1>
-        </div>
+      {/* Main Layout Layer */}
+      <div className="relative z-10 flex flex-col min-h-screen">
 
-        {/* Wallet Connection */}
-        <WalletButton
-          balance={balance}
-          onConnect={() => { }}
-          onDisconnect={() => { }}
-        />
-      </header>
+        {/* Sticky Glass Navbar */}
+        <header className="sticky top-0 z-50 w-full glass-strong border-b border-white/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div className="flex items-center gap-2 group cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="w-8 h-8 rounded-lg bg-flow-green/20 border border-flow-green flex items-center justify-center animate-pulse group-hover:animate-none">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-flow-green">
+                  <path d="M12.378 1.602a.75.75 0 00-.756 0L3 6.632l9 5.25 9-5.25-8.622-5.03zM21.75 7.93l-9 5.25v9l8.628-5.032a.75.75 0 00.372-.648V7.93zM11.25 22.18v-9l-9-5.25v8.57a.75.75 0 00.372.648l8.628 5.033z" />
+                </svg>
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight text-white group-hover:text-neon transition-all">
+                Flow<span className="text-flow-green">Shambo</span>
+              </h1>
+            </div>
 
-      {/* Main Content */}
-      <main
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'row',
-          padding: 'clamp(16px, 2vw, 24px)',
-          gap: 'clamp(16px, 2vw, 24px)',
-          maxWidth: '1600px',
-          margin: '0 auto',
-          width: '100%',
-        }}
-      >
-        {/* Left Side - Game Arena */}
-        <div
-          style={{
-            flex: '1 1 60%',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 'clamp(12px, 2vw, 16px)',
-            minWidth: 0,
-          }}
-        >
-          {/* Game Description */}
-          <div
-            style={{
-              backgroundColor: 'var(--background-surface)',
-              borderRadius: '12px',
-              padding: 'clamp(14px, 2vw, 18px) clamp(16px, 2vw, 20px)',
-              border: '1px solid var(--border-default)',
-            }}
-          >
-            <h2
-              style={{
-                fontSize: 'clamp(15px, 2.5vw, 18px)',
-                fontWeight: '600',
-                color: FLOW_GREEN,
-                marginBottom: '6px',
-                margin: 0,
-              }}
-            >
-              Battle Arena
-            </h2>
-            <p
-              style={{
-                fontSize: 'clamp(11px, 1.8vw, 13px)',
-                color: 'var(--foreground-secondary)',
-                margin: 0,
-                marginTop: '6px',
-              }}
-            >
-              Real-time physics simulation
-            </p>
+            <WalletButton
+              balance={balance}
+              onConnect={() => { }}
+              onDisconnect={() => { }}
+            />
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row gap-8">
+
+          {/* Left Column: Arena & Game Info */}
+          <div className="flex-1 flex flex-col gap-6 min-h-0">
+
+            {/* Header / Info Block */}
+            <div className="glass-card rounded-2xl p-6 border-l-4 border-flow-green animate-fade-in">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-xl font-bold text-flow-green mb-1 flex items-center gap-2">
+                    Battle Arena <span className="text-xs bg-flow-green/10 text-flow-green px-2 py-0.5 rounded-full border border-flow-green/30">LIVE</span>
+                  </h2>
+                  <p className="text-sm text-zinc-400">
+                    Physics-based simulation on Flow Blockchain.
+                  </p>
+                </div>
+                {/* Status Indicator */}
+                <div className="flex flex-col items-end">
+                  <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
+                    <span className={`w-2 h-2 rounded-full ${isSimulationRunning ? 'bg-flow-green animate-pulse' : 'bg-zinc-500'}`} />
+                    <span className="text-xs font-mono text-zinc-300">
+                      {isSimulationRunning ? 'SIMULATION ACTIVE' : 'WAITING FOR BET'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Arena Display */}
+            <div className="flex-1 glass rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative min-h-[500px] flex flex-col group">
+              {/* Arena Glow Effect */}
+              <div className="absolute -inset-1 bg-flow-green/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+              <div className="relative z-10 flex-1 flex flex-col w-full h-full bg-black/40">
+                <Arena
+                  objects={simulation.objects}
+                  width={ARENA_WIDTH}
+                  height={ARENA_HEIGHT}
+                  showCounts={isSimulationRunning || simulation.objects.length > 0}
+                  collisionEvents={simulation.collisionEvents}
+                  className="w-full h-full"
+                />
+
+                {isSimulationRunning && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 glass px-6 py-2 rounded-full border border-flow-green/30 flex items-center gap-3 animate-slide-up">
+                    <div className="w-2 h-2 rounded-full bg-flow-green animate-spin" />
+                    <span className="text-flow-green font-bold text-sm tracking-wider">
+                      SIMULATING MATCH...
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Error Display */}
+            {error && (
+              <ErrorDisplay
+                error={error}
+                onDismiss={handleDismissError}
+                showRetry={!!isStuckError}
+                onRetry={isStuckError ? handleResetGame : undefined}
+              />
+            )}
           </div>
 
-          {/* Arena Container */}
-          <div
-            style={{
-              flex: 1,
-              backgroundColor: 'var(--background-surface)',
-              borderRadius: '12px',
-              padding: 0,
-              border: '1px solid var(--border-default)',
-              display: 'flex',
-              flexDirection: 'column',
-              minHeight: '500px',
-              overflow: 'hidden',
-            }}
-          >
-            <Arena
-              objects={simulation.objects}
-              width={ARENA_WIDTH}
-              height={ARENA_HEIGHT}
-              showCounts={isSimulationRunning || simulation.objects.length > 0}
-              collisionEvents={simulation.collisionEvents}
-            />
-
-            {/* Simulation Status */}
-            {isSimulationRunning && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '12px',
-                  padding: '12px 16px',
-                  backgroundColor: 'rgba(0, 239, 139, 0.05)',
-                  borderTop: `1px solid ${FLOW_GREEN}`,
-                }}
-              >
-                <div
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: FLOW_GREEN,
-                    animation: 'pulse 2s ease-in-out infinite',
-                  }}
+          {/* Right Column: Betting & Controls */}
+          <div className="lg:w-[400px] flex-shrink-0 flex flex-col gap-6">
+            {!isSimulationRunning && !showResult ? (
+              <div className="animate-scale-in">
+                <BettingPanel
+                  onPlaceBet={handlePlaceBet}
+                  balance={balance ?? 0}
+                  disabled={!wallet.connected}
+                  isLoading={isLoading}
+                  transactionError={placeBet.error}
+                  onClearError={() => placeBet.clearError?.()}
+                  onResetGame={handleResetGame}
                 />
-                <span
-                  style={{
-                    color: FLOW_GREEN,
-                    fontSize: 'clamp(13px, 2vw, 15px)',
-                    fontWeight: '600',
-                  }}
-                >
-                  Simulation Running
-                </span>
-                <span
-                  style={{
-                    color: 'var(--foreground-secondary)',
-                    fontSize: 'clamp(12px, 1.8vw, 14px)',
-                  }}
-                >
-                  • Your bet: {gameStore.game.prediction?.toUpperCase()}
-                </span>
+              </div>
+            ) : (
+              <div className="glass-card rounded-2xl p-8 text-center border border-flow-green/30 animate-scale-in flex flex-col items-center justify-center min-h-[300px]">
+                <div className="w-16 h-16 rounded-full bg-flow-green/20 flex items-center justify-center mb-6 animate-pulse">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-flow-green">
+                    <path d="M19.5 6h-15v9h15V6z" />
+                    <path fillRule="evenodd" d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v11.25c0 1.035.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875V4.875C22.5 3.839 21.66 3 20.625 3H3.375zm.75 1.5h15.75c.414 0 .75.336.75.75v9c0 .414-.336.75-.75.75H4.125a.75.75 0 01-.75-.75v-9c0-.414.336-.75.75-.75z" clipRule="evenodd" />
+                    <path d="M9.75 10.5a.75.75 0 000-1.5h-1.5v-1.5a.75.75 0 00-1.5 0v1.5h-1.5a.75.75 0 000 1.5h1.5v1.5a.75.75 0 001.5 0v-1.5h1.5zM16.5 10.5a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 10.5a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-flow-green mb-2">Game in Progress</h3>
+                <p className="text-zinc-400 mb-6">
+                  Watch the arena! Your bet is placed on <span className="text-white font-bold uppercase">{gameStore.game.prediction}</span>
+                </p>
+                <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-flow-green w-1/2 animate-[shimmer_2s_infinite_linear]" />
+                </div>
               </div>
             )}
           </div>
 
-          {/* Error Display */}
-          {error && (
-            <ErrorDisplay
-              error={error}
-              onDismiss={handleDismissError}
-              showRetry={!!isStuckError}
-              onRetry={isStuckError ? handleResetGame : undefined}
-            />
-          )}
-        </div>
+        </main>
 
-        {/* Right Side - Betting Panel */}
-        <div
-          style={{
-            flex: '0 0 auto',
-            width: 'clamp(320px, 35vw, 420px)',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {!isSimulationRunning && !showResult && (
-            <BettingPanel
-              onPlaceBet={handlePlaceBet}
-              balance={balance ?? 0}
-              disabled={!wallet.connected}
-              isLoading={isLoading}
-              transactionError={placeBet.error}
-              onClearError={() => placeBet.clearError?.()}
-              onResetGame={handleResetGame}
-            />
-          )}
+        {/* Footer */}
+        <footer className="mt-auto py-8 border-t border-white/5 glass-strong">
+          <div className="max-w-7xl mx-auto px-4 text-center">
+            <p className="text-sm text-zinc-500">
+              Built on <a href="https://flow.com" target="_blank" rel="noopener noreferrer" className="text-flow-green hover:text-white transition-colors font-medium">Flow Blockchain</a> • Testnet Only
+            </p>
+          </div>
+        </footer>
+      </div>
 
-          {(isSimulationRunning || showResult) && (
-            <div
-              style={{
-                backgroundColor: 'var(--background-surface)',
-                borderRadius: '12px',
-                padding: 'clamp(20px, 3vw, 24px)',
-                border: '1px solid var(--border-default)',
-              }}
-            >
-              <h3
-                style={{
-                  color: FLOW_GREEN,
-                  fontSize: 'clamp(16px, 2.5vw, 18px)',
-                  fontWeight: '600',
-                  marginBottom: '16px',
-                  margin: 0,
-                }}
-              >
-                Game in Progress
-              </h3>
-              <p
-                style={{
-                  color: 'var(--foreground-secondary)',
-                  fontSize: 'clamp(13px, 2vw, 14px)',
-                  margin: 0,
-                  marginTop: '12px',
-                }}
-              >
-                Watch the simulation to see if your prediction wins!
-              </p>
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* Mobile Layout - Stack vertically on small screens */}
-      <style>{`
-        @media (max-width: 1024px) {
-          main {
-            flex-direction: column !important;
-          }
-          main > div:last-child {
-            width: 100% !important;
-            max-width: 500px !important;
-            margin: 0 auto !important;
-          }
-        }
-      `}</style>
-
-      {/* Footer */}
-      <footer
-        style={{
-          textAlign: 'center',
-          padding: 'clamp(12px, 2vw, 16px) clamp(16px, 3vw, 24px)',
-          borderTop: '1px solid var(--border-default)',
-          backgroundColor: 'var(--background-surface)',
-        }}
-      >
-        <p
-          style={{
-            fontSize: 'clamp(10px, 2vw, 12px)',
-            color: 'var(--foreground-muted)',
-            margin: 0,
-          }}
-        >
-          Built on{' '}
-          <a
-            href="https://flow.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              color: FLOW_GREEN,
-              textDecoration: 'none',
-            }}
-          >
-            Flow Blockchain
-          </a>
-          {' '}• Testnet Only
-        </p>
-      </footer>
-
-      {/* Loading Overlay */}
+      {/* Global Overlays */}
       <LoadingOverlay
         isVisible={isLoading}
         loadingType={loadingType}
@@ -500,20 +301,20 @@ export default function Home() {
         }}
       />
 
-      {/* Result Overlay */}
       {showResult && simulation.winner && (
         <ResultOverlay
           winner={simulation.winner}
-          playerWon={gameStore.game.playerWon ?? false}
-          payout={gameStore.game.playerWon ? (gameStore.game.betAmount ?? 0) * 2.5 : 0}
+          playerWon={simulation.winner === gameStore.game.prediction}
+          payout={simulation.winner === gameStore.game.prediction ? (gameStore.game.betAmount ?? 0) * 2.5 : 0}
           onPlayAgain={handlePlayAgain}
           isVisible={showResult}
           betTxId={gameStore.game.betTransactionId}
           revealTxId={gameStore.game.revealTransactionId}
           settleTxId={gameStore.game.settleTransactionId}
+          betAmount={gameStore.game.betAmount ?? 0}
         />
       )}
-      </div>
     </div>
   );
 }
+

@@ -12,47 +12,58 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { FlowShamboError, ErrorSeverity } from '../lib/errors';
 
 /**
- * Flow green color
+ * Severity configuration for styling
  */
-const FLOW_GREEN = '#00EF8B';
-
-/**
- * Error colors by severity
- */
-const SEVERITY_COLORS: Record<ErrorSeverity, { bg: string; border: string; text: string }> = {
+const SEVERITY_CONFIG: Record<ErrorSeverity, {
+  bg: string;
+  border: string;
+  text: string;
+  icon: ReactNode;
+}> = {
   info: {
-    bg: 'rgba(0, 191, 255, 0.1)',
-    border: '#00BFFF',
-    text: '#00BFFF',
+    bg: 'bg-blue-500/10',
+    border: 'border-blue-500',
+    text: 'text-blue-500',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+        <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.041-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+      </svg>
+    ),
   },
   warning: {
-    bg: 'rgba(255, 193, 7, 0.1)',
-    border: '#FFC107',
-    text: '#FFC107',
+    bg: 'bg-yellow-500/10',
+    border: 'border-yellow-500',
+    text: 'text-yellow-500',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+        <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+      </svg>
+    ),
   },
   error: {
-    bg: 'rgba(255, 107, 107, 0.1)',
-    border: '#FF6B6B',
-    text: '#FF6B6B',
+    bg: 'bg-red-500/10',
+    border: 'border-red-500',
+    text: 'text-red-500',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+        <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clipRule="evenodd" />
+      </svg>
+    ),
   },
   critical: {
-    bg: 'rgba(220, 53, 69, 0.15)',
-    border: '#DC3545',
-    text: '#DC3545',
+    bg: 'bg-red-700/20',
+    border: 'border-red-700',
+    text: 'text-red-700',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+        <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+      </svg>
+    ),
   },
-};
-
-/**
- * Icons by severity
- */
-const SEVERITY_ICONS: Record<ErrorSeverity, string> = {
-  info: 'ℹ️',
-  warning: '⚠️',
-  error: '❌',
-  critical: '🚨',
 };
 
 /**
@@ -86,7 +97,7 @@ export interface ErrorDisplayProps {
  */
 function normalizeError(error: FlowShamboError | string | null): FlowShamboError | null {
   if (!error) return null;
-  
+
   if (typeof error === 'string') {
     return {
       code: 'DISPLAY_ERROR',
@@ -98,7 +109,7 @@ function normalizeError(error: FlowShamboError | string | null): FlowShamboError
       timestamp: Date.now(),
     };
   }
-  
+
   return error;
 }
 
@@ -135,87 +146,62 @@ export function ErrorDisplay({
   maxRetryAttempts,
 }: ErrorDisplayProps) {
   const [isVisible, setIsVisible] = useState(true);
-  
+
   const normalizedError = normalizeError(error);
-  
+
   // Auto-dismiss effect
   useEffect(() => {
     if (!normalizedError || autoDismissMs <= 0) return;
-    
+
     const timer = setTimeout(() => {
       setIsVisible(false);
       onDismiss?.();
     }, autoDismissMs);
-    
+
     return () => clearTimeout(timer);
   }, [normalizedError, autoDismissMs, onDismiss]);
-  
+
   // Reset visibility when error changes
   useEffect(() => {
     if (normalizedError) {
       setIsVisible(true);
     }
   }, [normalizedError?.timestamp]);
-  
+
   const handleDismiss = useCallback(() => {
     setIsVisible(false);
     onDismiss?.();
   }, [onDismiss]);
-  
+
   const handleRetry = useCallback(() => {
     onRetry?.();
   }, [onRetry]);
-  
+
   if (!normalizedError || !isVisible) {
     return null;
   }
-  
-  const colors = SEVERITY_COLORS[normalizedError.severity];
-  const icon = SEVERITY_ICONS[normalizedError.severity];
+
+  const config = SEVERITY_CONFIG[normalizedError.severity];
   const showRetryButton = showRetry && normalizedError.retryable && onRetry;
   const showRetryProgress = retryAttempt !== undefined && maxRetryAttempts !== undefined;
-  
+
   if (compact) {
     return (
       <div
-        className={`error-display error-display--compact ${className}`}
+        className={`flex items-center gap-2 p-2 rounded-lg border ${config.bg} ${config.border} ${className}`}
         role="alert"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px 12px',
-          backgroundColor: colors.bg,
-          borderRadius: '6px',
-          border: `1px solid ${colors.border}`,
-        }}
         data-testid="error-display"
         data-severity={normalizedError.severity}
       >
-        <span aria-hidden="true">{icon}</span>
-        <span
-          style={{
-            color: colors.text,
-            fontSize: '13px',
-            flex: 1,
-          }}
-        >
+        <span aria-hidden="true">{config.icon}</span>
+        <span className={`text-sm flex-1 ${config.text}`}>
           {normalizedError.message}
         </span>
         {showRetryButton && (
           <button
             onClick={handleRetry}
             disabled={isRetrying}
-            style={{
-              backgroundColor: 'transparent',
-              border: `1px solid ${colors.border}`,
-              borderRadius: '4px',
-              color: colors.text,
-              fontSize: '12px',
-              padding: '4px 8px',
-              cursor: isRetrying ? 'not-allowed' : 'pointer',
-              opacity: isRetrying ? 0.6 : 1,
-            }}
+            className={`px-2 py-1 text-xs bg-transparent border rounded opacity-100 disabled:opacity-50 disabled:cursor-not-allowed ${config.border} ${config.text}`}
             aria-label="Retry"
           >
             {isRetrying ? '...' : 'Retry'}
@@ -224,15 +210,7 @@ export function ErrorDisplay({
         {onDismiss && (
           <button
             onClick={handleDismiss}
-            style={{
-              backgroundColor: 'transparent',
-              border: 'none',
-              color: colors.text,
-              cursor: 'pointer',
-              padding: '2px',
-              fontSize: '14px',
-              lineHeight: 1,
-            }}
+            className={`bg-transparent border-none cursor-pointer p-0.5 text-sm leading-none ${config.text}`}
             aria-label="Dismiss error"
           >
             ×
@@ -241,155 +219,66 @@ export function ErrorDisplay({
       </div>
     );
   }
-  
+
   return (
     <div
-      className={`error-display ${className}`}
+      className={`rounded-lg p-6 max-w-md border animate-scale-in ${config.bg} ${config.border} ${className}`}
       role="alert"
-      style={{
-        backgroundColor: colors.bg,
-        border: `1px solid ${colors.border}`,
-        borderRadius: '8px',
-        padding: '16px',
-        maxWidth: '400px',
-      }}
       data-testid="error-display"
       data-severity={normalizedError.severity}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: '12px',
-        }}
-      >
-        <span
-          style={{
-            fontSize: '20px',
-            lineHeight: 1,
-          }}
-          aria-hidden="true"
-        >
-          {icon}
+      <div className="flex items-start gap-3">
+        <span className="text-xl leading-none" aria-hidden="true">
+          {config.icon}
         </span>
-        
-        <div style={{ flex: 1 }}>
+
+        <div className="flex-1">
           {/* Error Title */}
-          <p
-            style={{
-              color: colors.text,
-              fontSize: '15px',
-              fontWeight: '600',
-              margin: 0,
-              marginBottom: '6px',
-            }}
-          >
-            {normalizedError.severity === 'info' ? 'Notice' : 
-             normalizedError.severity === 'warning' ? 'Warning' :
-             normalizedError.severity === 'critical' ? 'Critical Error' : 'Error'}
+          <p className={`text-base font-semibold mb-1 ${config.text}`}>
+            {normalizedError.severity === 'info' ? 'Notice' :
+              normalizedError.severity === 'warning' ? 'Warning' :
+                normalizedError.severity === 'critical' ? 'Critical Error' : 'Error'}
           </p>
-          
+
           {/* Error Message */}
-          <p
-            style={{
-              color: '#ffffff',
-              fontSize: '14px',
-              margin: 0,
-              marginBottom: normalizedError.suggestedAction ? '8px' : '12px',
-              opacity: 0.9,
-            }}
-          >
+          <p className={`text-sm text-white/90 ${normalizedError.suggestedAction ? 'mb-2' : 'mb-3'}`}>
             {normalizedError.message}
           </p>
-          
+
           {/* Suggested Action */}
           {normalizedError.suggestedAction && (
-            <p
-              style={{
-                color: '#888888',
-                fontSize: '13px',
-                margin: 0,
-                marginBottom: '12px',
-                fontStyle: 'italic',
-              }}
-            >
+            <p className="text-sm text-zinc-400 italic mb-3">
               {normalizedError.suggestedAction}
             </p>
           )}
-          
+
           {/* Retry Progress */}
           {showRetryProgress && isRetrying && (
-            <p
-              style={{
-                color: '#888888',
-                fontSize: '12px',
-                margin: 0,
-                marginBottom: '12px',
-              }}
-            >
+            <p className="text-xs text-zinc-400 mb-3">
               Retry attempt {retryAttempt} of {maxRetryAttempts}...
             </p>
           )}
-          
+
           {/* Action Buttons */}
-          <div
-            style={{
-              display: 'flex',
-              gap: '8px',
-            }}
-          >
+          <div className="flex gap-2">
             {showRetryButton && (
               <button
                 onClick={handleRetry}
                 disabled={isRetrying}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  backgroundColor: FLOW_GREEN,
-                  color: '#000000',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  cursor: isRetrying ? 'not-allowed' : 'pointer',
-                  opacity: isRetrying ? 0.6 : 1,
-                  transition: 'opacity 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
+                className="px-4 py-2 text-sm font-semibold bg-flow-green text-black rounded-md flex items-center gap-2 hover:bg-flow-green-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 aria-label="Retry operation"
               >
                 {isRetrying && (
-                  <span
-                    style={{
-                      width: '12px',
-                      height: '12px',
-                      border: '2px solid #000000',
-                      borderTopColor: 'transparent',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite',
-                    }}
-                    aria-hidden="true"
-                  />
+                  <div className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin" aria-hidden="true" />
                 )}
                 {isRetrying ? 'Retrying...' : 'Retry'}
               </button>
             )}
-            
+
             {onDismiss && (
               <button
                 onClick={handleDismiss}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  border: '1px solid #666666',
-                  backgroundColor: 'transparent',
-                  color: '#ffffff',
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'border-color 0.2s ease',
-                }}
+                className="px-4 py-2 text-sm font-medium bg-transparent border border-zinc-500 text-white rounded-md hover:border-zinc-300 transition-colors"
                 aria-label="Dismiss error"
               >
                 Dismiss
@@ -397,36 +286,18 @@ export function ErrorDisplay({
             )}
           </div>
         </div>
-        
+
         {/* Close button (top right) */}
-        {onDismiss && (
+        {onDismiss && !compact && (
           <button
             onClick={handleDismiss}
-            style={{
-              backgroundColor: 'transparent',
-              border: 'none',
-              color: '#666666',
-              cursor: 'pointer',
-              padding: '4px',
-              fontSize: '18px',
-              lineHeight: 1,
-              marginTop: '-4px',
-              marginRight: '-4px',
-            }}
+            className="text-zinc-500 hover:text-zinc-300 -mt-1 -mr-1 p-1 text-lg leading-none"
             aria-label="Close"
           >
             ×
           </button>
         )}
       </div>
-      
-      {/* CSS for spinner animation */}
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

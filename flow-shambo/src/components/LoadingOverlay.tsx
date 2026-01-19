@@ -3,11 +3,6 @@
 import type { LoadingType } from '../types';
 
 /**
- * Flow green color used for the spinner
- */
-const FLOW_GREEN = '#00EF8B';
-
-/**
  * Props for the LoadingOverlay component
  */
 export interface LoadingOverlayProps {
@@ -59,7 +54,6 @@ export function getLoadingSubtitle(loadingType: LoadingType | null): string | nu
 
 /**
  * LoadingOverlay component for full-screen loading states during transactions
- * ...
  */
 export function LoadingOverlay({
   isVisible,
@@ -76,102 +70,41 @@ export function LoadingOverlay({
 
   return (
     <div
-      className="loading-overlay"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/90 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
       aria-busy="true"
       aria-label={message}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.85)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-      }}
     >
       {/* Spinner Container */}
-      <div
-        className="loading-spinner-container"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '24px',
-        }}
-      >
+      <div className="flex flex-col items-center gap-6 animate-fade-in p-8 rounded-2xl">
         {/* Flow Green Spinner */}
-        <div
-          className="loading-spinner"
-          style={{
-            width: '64px',
-            height: '64px',
-            border: `4px solid rgba(0, 239, 139, 0.2)`,
-            borderTopColor: FLOW_GREEN,
-            borderRadius: '50%',
-            animation: 'loading-spin 1s linear infinite',
-          }}
-          aria-hidden="true"
-        />
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full border-4 border-flow-green/20 border-t-flow-green animate-spin shadow-[0_0_20px_rgba(0,239,139,0.2)]" />
+          <div className="absolute inset-0 bg-flow-green/10 rounded-full blur-xl animate-pulse" />
+        </div>
 
         {/* Loading Message */}
-        <div
-          className="loading-message"
-          style={{
-            textAlign: 'center',
-          }}
-        >
-          <p
-            style={{
-              color: FLOW_GREEN,
-              fontSize: '20px',
-              fontWeight: '600',
-              margin: 0,
-              marginBottom: subtitle ? '8px' : 0,
-            }}
-          >
+        <div className="text-center space-y-2">
+          <p className="text-xl font-bold text-flow-green animate-pulse drop-shadow-[0_0_10px_rgba(0,239,139,0.3)]">
             {message}
           </p>
 
           {subtitle && (
-            <p
-              className="loading-subtitle"
-              style={{
-                color: '#ffffff',
-                fontSize: '14px',
-                fontWeight: '400',
-                margin: 0,
-                opacity: 0.8,
-              }}
-            >
+            <p className="text-sm text-zinc-400 font-medium">
               {subtitle}
             </p>
           )}
         </div>
 
         {/* Pulsing dots animation for visual feedback */}
-        <div
-          className="loading-dots"
-          style={{
-            display: 'flex',
-            gap: '8px',
-          }}
-          aria-hidden="true"
-        >
+        <div className="flex gap-2" aria-hidden="true">
           {[0, 1, 2].map((index) => (
             <div
               key={index}
+              className="w-2 h-2 rounded-full bg-flow-green"
               style={{
-                width: '8px',
-                height: '8px',
-                backgroundColor: FLOW_GREEN,
-                borderRadius: '50%',
-                animation: `loading-pulse 1.4s ease-in-out ${index * 0.2}s infinite`,
+                animation: `pulse 1.4s ease-in-out ${index * 0.2}s infinite`,
               }}
             />
           ))}
@@ -181,32 +114,15 @@ export function LoadingOverlay({
         {onCancel && (
           <button
             onClick={onCancel}
-            style={{
-              marginTop: '16px',
-              backgroundColor: 'transparent',
-              border: '1px solid #666',
-              color: '#888',
-              padding: '6px 12px',
-              borderRadius: '6px',
-              fontSize: '12px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}
+            className="mt-4 px-4 py-2 text-xs text-zinc-500 border border-zinc-700 rounded-lg hover:text-zinc-300 hover:border-zinc-500 hover:bg-zinc-900 transition-all"
           >
             Stuck? Force Cancel
           </button>
         )}
       </div>
 
-      {/* CSS Animations */}
-
       <style>{`
-        @keyframes loading-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        
-        @keyframes loading-pulse {
+        @keyframes pulse {
           0%, 80%, 100% {
             transform: scale(0.6);
             opacity: 0.5;

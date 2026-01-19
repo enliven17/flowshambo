@@ -62,6 +62,8 @@ export interface ResultOverlayProps {
   revealTxId?: string | null;
   /** Settlement transaction ID */
   settleTxId?: string | null;
+  /** The bet amount (to display loss) */
+  betAmount?: number;
 }
 
 /**
@@ -151,6 +153,7 @@ export function ResultOverlay({
   betTxId,
   revealTxId,
   settleTxId,
+  betAmount = 0,
 }: ResultOverlayProps) {
   const [confetti, setConfetti] = useState<ConfettiParticle[]>([]);
   const [isShaking, setIsShaking] = useState(false);
@@ -263,26 +266,16 @@ export function ResultOverlay({
     return null;
   }
 
-  const resultColor = playerWon ? FLOW_GREEN : LOSE_COLOR;
+  const resultColor = playerWon ? 'text-flow-green' : 'text-red-500';
+  const borderColor = playerWon ? 'border-flow-green' : 'border-red-500';
+  const shadowColor = playerWon ? 'shadow-flow-green/20' : 'shadow-red-500/20';
+  const glowColor = playerWon ? 'rgba(0, 239, 139, 0.4)' : 'rgba(255, 107, 107, 0.4)';
   const resultMessage = playerWon ? 'VICTORY' : 'DEFEAT';
   const winnerName = OBJECT_NAMES[winner];
 
   return (
     <div
-      className={`result-overlay ${className}`}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-        zIndex: 1000,
-        overflow: 'hidden',
-      }}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm overflow-hidden ${className}`}
       data-testid="result-overlay"
       role="dialog"
       aria-modal="true"
@@ -292,9 +285,8 @@ export function ResultOverlay({
       {confetti.map(particle => (
         <div
           key={particle.id}
-          className="confetti-particle"
+          className="absolute rounded-full pointer-events-none"
           style={{
-            position: 'absolute',
             left: `${particle.x}%`,
             top: `${particle.y}%`,
             width: `${particle.size}px`,
@@ -303,7 +295,6 @@ export function ResultOverlay({
             transform: `rotate(${particle.rotation}deg)`,
             opacity: particle.opacity,
             borderRadius: Math.random() > 0.5 ? '50%' : '0',
-            pointerEvents: 'none',
           }}
           data-testid="confetti-particle"
         />
@@ -311,51 +302,24 @@ export function ResultOverlay({
 
       {/* Result content */}
       <div
-        className={`result-content ${isShaking ? 'shake' : ''}`}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '20px',
-          padding: 'clamp(32px, 5vw, 48px)',
-          backgroundColor: '#1a1a1a',
-          borderRadius: '12px',
-          border: `2px solid ${resultColor}`,
-          boxShadow: `0 0 30px ${resultColor}40`,
-          transform: showContent ? 'scale(1)' : 'scale(0.8)',
-          opacity: showContent ? 1 : 0,
-          transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
-          animation: isShaking ? 'shake 0.5s ease-in-out' : 'none',
-          minWidth: 'clamp(280px, 80vw, 400px)',
-          maxWidth: '90vw',
-          textAlign: 'center',
-        }}
+        className={`glass-card p-8 md:p-12 rounded-2xl flex flex-col items-center gap-6 max-w-sm md:max-w-md w-[90%] border-2 shadow-2xl transition-all duration-300 ${borderColor} ${shadowColor} ${isShaking ? 'animate-shake' : ''} ${showContent ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}`}
         data-testid="result-content"
       >
         {/* Win/Lose message */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+        <div className="flex flex-col gap-2 w-full text-center">
           <h2
             id="result-title"
+            className={`text-4xl md:text-5xl font-black tracking-widest ${resultColor}`}
             style={{
-              fontSize: 'clamp(32px, 8vw, 48px)',
-              fontWeight: '900',
-              color: resultColor,
-              margin: 0,
-              textShadow: playerWon ? `0 0 20px ${resultColor}` : 'none',
-              letterSpacing: '2px',
+              textShadow: playerWon ? '0 0 20px rgba(0, 239, 139, 0.5)' : 'none',
             }}
             data-testid="result-message"
           >
             {resultMessage}
           </h2>
-          
+
           <div
-            style={{
-              fontSize: 'clamp(16px, 3vw, 20px)',
-              color: '#ffffff',
-              fontWeight: '600',
-              letterSpacing: '1px',
-            }}
+            className="text-lg md:text-xl font-bold text-white tracking-widest"
             data-testid="winner-type"
           >
             {winnerName} WINS
@@ -364,56 +328,34 @@ export function ResultOverlay({
 
         {/* Payout amount */}
         <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '16px 24px',
-            backgroundColor: playerWon ? 'rgba(0, 239, 139, 0.1)' : 'rgba(255, 107, 107, 0.1)',
-            borderRadius: '8px',
-            border: `1px solid ${resultColor}`,
-            width: '100%',
-          }}
+          className={`flex flex-col items-center gap-1 py-4 px-8 rounded-xl w-full border ${playerWon ? 'bg-flow-green/10 border-flow-green/30' : 'bg-red-500/10 border-red-500/30'}`}
         >
-          <span
-            style={{
-              fontSize: 'clamp(11px, 2vw, 13px)',
-              color: '#888888',
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-              fontWeight: '600',
-            }}
-          >
+          <span className="text-xs uppercase tracking-widest font-bold text-zinc-400">
             {playerWon ? 'PAYOUT' : 'LOST'}
           </span>
           <span
-            style={{
-              fontSize: 'clamp(28px, 6vw, 36px)',
-              fontWeight: '900',
-              color: resultColor,
-            }}
+            className={`text-3xl md:text-4xl font-black ${resultColor}`}
             data-testid="payout-amount"
           >
-            {playerWon ? '+' : '-'}{formatPayout(playerWon ? payout : payout || 0)} FLOW
+            {playerWon ? '+' : '-'}{formatPayout(playerWon ? payout : betAmount)} FLOW
           </span>
         </div>
 
         {/* Transaction Links */}
         {(betTxId || revealTxId || settleTxId) && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: 'clamp(10px, 1.8vw, 12px)', width: '100%' }}>
+          <div className="flex flex-col gap-2 text-[10px] md:text-xs w-full text-zinc-500 text-center">
             {betTxId && (
-              <a href={getExplorerLink(betTxId)} target="_blank" rel="noopener noreferrer" style={{ color: '#666', textDecoration: 'none', borderBottom: '1px dotted #666', padding: '4px 0' }}>
+              <a href={getExplorerLink(betTxId)} target="_blank" rel="noopener noreferrer" className="hover:text-zinc-300 border-b border-zinc-700 hover:border-zinc-500 pb-0.5 transition-colors">
                 View Bet Transaction
               </a>
             )}
             {revealTxId && (
-              <a href={getExplorerLink(revealTxId)} target="_blank" rel="noopener noreferrer" style={{ color: '#666', textDecoration: 'none', borderBottom: '1px dotted #666', padding: '4px 0' }}>
+              <a href={getExplorerLink(revealTxId)} target="_blank" rel="noopener noreferrer" className="hover:text-zinc-300 border-b border-zinc-700 hover:border-zinc-500 pb-0.5 transition-colors">
                 View Reveal Transaction
               </a>
             )}
             {settleTxId && (
-              <a href={getExplorerLink(settleTxId)} target="_blank" rel="noopener noreferrer" style={{ color: '#666', textDecoration: 'none', borderBottom: '1px dotted #666', padding: '4px 0' }}>
+              <a href={getExplorerLink(settleTxId)} target="_blank" rel="noopener noreferrer" className="hover:text-zinc-300 border-b border-zinc-700 hover:border-zinc-500 pb-0.5 transition-colors">
                 View Settlement Transaction
               </a>
             )}
@@ -423,29 +365,7 @@ export function ResultOverlay({
         {/* Play Again button */}
         <button
           onClick={handlePlayAgain}
-          style={{
-            padding: 'clamp(12px, 2.5vw, 16px) clamp(32px, 8vw, 48px)',
-            fontSize: 'clamp(14px, 2.5vw, 16px)',
-            fontWeight: '700',
-            color: '#000000',
-            backgroundColor: FLOW_GREEN,
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-            marginTop: '8px',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-            width: '100%',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.02)';
-            e.currentTarget.style.boxShadow = `0 0 20px ${FLOW_GREEN}`;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
+          className="w-full py-4 text-sm md:text-base font-bold text-black bg-flow-green rounded-xl uppercase tracking-widest hover:bg-flow-green-hover hover:scale-[1.02] active:scale-100 transition-all shadow-[0_0_20px_rgba(0,239,139,0.3)] hover:shadow-[0_0_30px_rgba(0,239,139,0.5)]"
           data-testid="play-again-button"
           aria-label="Play Again"
         >
@@ -460,10 +380,8 @@ export function ResultOverlay({
           10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
           20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
-        
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
         }
       `}</style>
     </div>

@@ -4,76 +4,33 @@ import { useState, useCallback, useMemo } from 'react';
 import type { ObjectType } from '../types';
 import { validateBetAmount, MIN_BET, MAX_BET } from '../lib/betting/validation';
 
-/**
- * Flow green color used throughout the component
- */
-const FLOW_GREEN = '#00EF8B';
-
-/**
- * Payout multiplier for winning bets
- */
 const PAYOUT_MULTIPLIER = 2.5;
 
-/**
- * Props for the BettingPanel component
- */
 export interface BettingPanelProps {
-  /** Callback when a bet is placed */
   onPlaceBet: (prediction: ObjectType, amount: number) => void;
-  /** User's current wallet balance */
   balance: number;
-  /** Minimum bet amount (defaults to MIN_BET) */
   minBet?: number;
-  /** Maximum bet amount (defaults to MAX_BET) */
   maxBet?: number;
-  /** Whether the panel is disabled (e.g., wallet not connected) */
   disabled?: boolean;
-  /** Whether a bet is currently being placed */
   isLoading?: boolean;
-  /** Transaction error message from bet placement */
   transactionError?: string | null;
-  /** Callback to clear transaction error and retry */
   onClearError?: () => void;
-  /** Callback to reset the game (clear stuck receipt) */
   onResetGame?: () => void;
 }
 
-/**
- * Object type display configuration
- */
 interface ObjectTypeConfig {
   type: ObjectType;
   label: string;
   emoji: string;
 }
 
+// Updated to use letters instead of emojis
 const OBJECT_TYPES: ObjectTypeConfig[] = [
-  { type: 'rock', label: 'Rock', emoji: '🪨' },
-  { type: 'paper', label: 'Paper', emoji: '📄' },
-  { type: 'scissors', label: 'Scissors', emoji: '✂️' },
+  { type: 'rock', label: 'Rock', emoji: 'R' },
+  { type: 'paper', label: 'Paper', emoji: 'P' },
+  { type: 'scissors', label: 'Scissors', emoji: 'S' },
 ];
 
-/**
- * BettingPanel component for placing bets in FlowShambo
- * 
- * Features:
- * - Prediction selector with Rock/Paper/Scissors buttons
- * - Amount input with min/max validation
- * - Place bet button with disabled states
- * - Potential payout display
- * - Flow green styling
- * 
- * @example
- * ```tsx
- * <BettingPanel
- *   onPlaceBet={(prediction, amount) => console.log(prediction, amount)}
- *   balance={10.5}
- *   disabled={!walletConnected}
- * />
- * ```
- * 
- * Requirements: 2.1, 2.2, 2.3
- */
 export function BettingPanel({
   onPlaceBet,
   balance,
@@ -89,87 +46,54 @@ export function BettingPanel({
   const [betAmount, setBetAmount] = useState<string>('');
   const [touched, setTouched] = useState(false);
 
-  // Parse bet amount as number
   const parsedAmount = useMemo(() => {
     const parsed = parseFloat(betAmount);
     return isNaN(parsed) ? 0 : parsed;
   }, [betAmount]);
 
-  // Validate bet amount
   const validation = useMemo(() => {
-    if (!touched && betAmount === '') {
-      return { valid: true, errorMessage: null };
-    }
+    if (!touched && betAmount === '') return { valid: true, errorMessage: null };
     return validateBetAmount(parsedAmount, balance, minBet, maxBet);
   }, [parsedAmount, balance, minBet, maxBet, touched, betAmount]);
 
-  // Calculate potential payout
   const potentialPayout = useMemo(() => {
-    if (parsedAmount > 0 && validation.valid) {
-      return parsedAmount * PAYOUT_MULTIPLIER;
-    }
+    if (parsedAmount > 0 && validation.valid) return parsedAmount * PAYOUT_MULTIPLIER;
     return 0;
   }, [parsedAmount, validation.valid]);
 
-  // Check if bet can be placed
   const canPlaceBet = useMemo(() => {
-    return (
-      !disabled &&
-      !isLoading &&
-      selectedPrediction !== null &&
-      parsedAmount > 0 &&
-      validation.valid
-    );
+    return !disabled && !isLoading && selectedPrediction !== null && parsedAmount > 0 && validation.valid;
   }, [disabled, isLoading, selectedPrediction, parsedAmount, validation.valid]);
 
-  // Handle prediction selection
   const handlePredictionSelect = useCallback((type: ObjectType) => {
-    if (!disabled && !isLoading) {
-      setSelectedPrediction(type);
-    }
+    if (!disabled && !isLoading) setSelectedPrediction(type);
   }, [disabled, isLoading]);
 
-  // Handle amount input change
   const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Allow empty string or valid number format
     if (value === '' || /^\d*\.?\d*$/.test(value)) {
       setBetAmount(value);
       setTouched(true);
     }
   }, []);
 
-  // Handle amount input blur
-  const handleAmountBlur = useCallback(() => {
-    setTouched(true);
-  }, []);
+  const handleAmountBlur = useCallback(() => setTouched(true), []);
 
-  // Handle place bet
   const handlePlaceBet = useCallback(() => {
-    if (canPlaceBet && selectedPrediction) {
-      onPlaceBet(selectedPrediction, parsedAmount);
-    }
+    if (canPlaceBet && selectedPrediction) onPlaceBet(selectedPrediction, parsedAmount);
   }, [canPlaceBet, selectedPrediction, parsedAmount, onPlaceBet]);
 
-  // Handle retry after transaction error
   const handleRetry = useCallback(() => {
-    if (onClearError) {
-      onClearError();
-    }
-    // Attempt to place bet again with current selection
+    if (onClearError) onClearError();
     if (selectedPrediction && parsedAmount > 0 && validation.valid) {
       onPlaceBet(selectedPrediction, parsedAmount);
     }
   }, [onClearError, selectedPrediction, parsedAmount, validation.valid, onPlaceBet]);
 
-  // Handle dismiss error without retry
   const handleDismissError = useCallback(() => {
-    if (onClearError) {
-      onClearError();
-    }
+    if (onClearError) onClearError();
   }, [onClearError]);
 
-  // Handle max bet button
   const handleMaxBet = useCallback(() => {
     const maxAllowed = Math.min(balance, maxBet);
     setBetAmount(maxAllowed.toString());
@@ -177,144 +101,39 @@ export function BettingPanel({
   }, [balance, maxBet]);
 
   return (
-    <div
-      className="betting-panel"
-      style={{
-        backgroundColor: 'var(--background-surface)',
-        borderRadius: '12px',
-        padding: 'clamp(20px, 3vw, 28px)',
-        border: '1px solid var(--border-default)',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-        width: '100%',
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          marginBottom: 'clamp(18px, 3vw, 22px)',
-          paddingBottom: '14px',
-          borderBottom: `1px solid ${FLOW_GREEN}`,
-        }}
-      >
-        <h2
-          style={{
-            color: FLOW_GREEN,
-            fontSize: 'clamp(17px, 3vw, 20px)',
-            fontWeight: '700',
-            margin: 0,
-          }}
-        >
-          Place Your Bet
-        </h2>
-        <p
-          style={{
-            color: 'var(--foreground-secondary)',
-            fontSize: 'clamp(11px, 1.8vw, 12px)',
-            margin: 0,
-            marginTop: '4px',
-          }}
-        >
-          Choose prediction and amount
-        </p>
+    <div className="glass-card rounded-2xl p-6 shadow-2xl animate-fade-in relative z-10 w-full backdrop-blur-md">
+      <div className="mb-6 pb-4 border-b border-white/10">
+        <h2 className="text-xl font-bold text-flow-green flex items-center gap-2">Place Your Bet</h2>
+        <p className="text-sm text-zinc-400 mt-1">Choose your move and bet amount</p>
       </div>
 
-      {/* Prediction Selector */}
-      <div style={{ marginBottom: 'clamp(18px, 3vw, 22px)' }}>
-        <label
-          style={{
-            display: 'block',
-            color: 'var(--foreground)',
-            fontSize: 'clamp(12px, 2vw, 14px)',
-            fontWeight: '600',
-            marginBottom: 'clamp(8px, 1.5vw, 10px)',
-          }}
-        >
-          Your Prediction
-        </label>
-        <div
-          className="prediction-selector"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 'clamp(8px, 1.5vw, 10px)',
-          }}
-        >
-          {OBJECT_TYPES.map(({ type, label }) => (
-            <button
-              key={type}
-              onClick={() => handlePredictionSelect(type)}
-              disabled={disabled || isLoading}
-              className={`prediction-button prediction-button--${type}`}
-              data-selected={selectedPrediction === type}
-              style={{
-                padding: 'clamp(12px, 2.5vw, 16px) clamp(8px, 1.5vw, 10px)',
-                borderRadius: '8px',
-                border: `2px solid ${selectedPrediction === type ? FLOW_GREEN : 'var(--border-default)'}`,
-                backgroundColor: selectedPrediction === type ? 'rgba(0, 239, 139, 0.15)' : 'var(--background)',
-                color: selectedPrediction === type ? FLOW_GREEN : 'var(--foreground)',
-                cursor: disabled || isLoading ? 'not-allowed' : 'pointer',
-                opacity: disabled || isLoading ? 0.5 : 1,
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 'clamp(4px, 1vw, 6px)',
-                boxShadow: selectedPrediction === type ? `0 0 15px rgba(0, 239, 139, 0.3)` : 'none',
-                fontSize: 'clamp(13px, 2vw, 15px)',
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-              aria-pressed={selectedPrediction === type}
-              aria-label={`Select ${label}`}
-            >
-              {label}
-            </button>
-          ))}
+      <div className="mb-6">
+        <label className="block text-sm font-semibold text-zinc-300 mb-3">Your Move</label>
+        <div className="grid grid-cols-3 gap-3">
+          {OBJECT_TYPES.map(({ type, label, emoji }) => {
+            const isSelected = selectedPrediction === type;
+            return (
+              <button
+                key={type}
+                onClick={() => handlePredictionSelect(type)}
+                disabled={disabled || isLoading}
+                className={`relative group flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${isSelected ? 'border-flow-green bg-flow-green/20 shadow-[0_0_20px_rgba(0,239,139,0.2)] scale-105 z-10' : 'border-zinc-700 bg-zinc-800/50 hover:border-zinc-500 hover:bg-zinc-800'} ${(disabled || isLoading) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <span className="text-2xl font-black font-mono transform transition-transform group-hover:scale-110 duration-200">{emoji}</span>
+                <span className={`text-xs font-bold uppercase tracking-wider ${isSelected ? 'text-flow-green' : 'text-zinc-400'}`}>{label}</span>
+                {isSelected && <div className="absolute inset-0 rounded-xl ring-2 ring-flow-green ring-opacity-50 animate-pulse pointer-events-none" />}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Amount Input */}
-      <div style={{ marginBottom: 'clamp(16px, 2.5vw, 20px)' }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '8px',
-          }}
-        >
-          <label
-            htmlFor="bet-amount"
-            style={{
-              color: 'var(--foreground)',
-              fontSize: 'clamp(12px, 2vw, 14px)',
-              fontWeight: '600',
-            }}
-          >
-            Bet Amount
-          </label>
-          <button
-            onClick={handleMaxBet}
-            disabled={disabled || isLoading}
-            className="max-bet-button"
-            style={{
-              backgroundColor: 'rgba(0, 239, 139, 0.1)',
-              border: `1px solid ${FLOW_GREEN}`,
-              borderRadius: '4px',
-              color: FLOW_GREEN,
-              fontSize: 'clamp(10px, 1.5vw, 11px)',
-              padding: '4px 8px',
-              cursor: disabled || isLoading ? 'not-allowed' : 'pointer',
-              opacity: disabled || isLoading ? 0.5 : 1,
-              fontWeight: '600',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            MAX
-          </button>
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <label htmlFor="bet-amount" className="text-sm font-semibold text-zinc-300">Bet Amount</label>
+          <button onClick={handleMaxBet} disabled={disabled || isLoading} className="text-[10px] font-bold text-flow-green bg-flow-green/10 border border-flow-green/50 px-2 py-1 rounded hover:bg-flow-green/20 disabled:opacity-50 transition-colors">MAX</button>
         </div>
-        <div style={{ position: 'relative' }}>
+        <div className="relative group">
           <input
             id="bet-amount"
             type="text"
@@ -323,322 +142,61 @@ export function BettingPanel({
             onChange={handleAmountChange}
             onBlur={handleAmountBlur}
             disabled={disabled || isLoading}
-            placeholder={`Min: ${minBet} FLOW`}
-            className="bet-amount-input"
-            style={{
-              width: '100%',
-              padding: 'clamp(12px, 1.8vw, 14px) clamp(14px, 2vw, 16px)',
-              paddingRight: '70px',
-              borderRadius: '10px',
-              border: `2px solid ${validation.errorMessage && touched ? '#ff6b6b' : 'var(--border-default)'}`,
-              backgroundColor: 'var(--background)',
-              color: 'var(--foreground)',
-              fontSize: 'clamp(15px, 2.5vw, 17px)',
-              fontWeight: '600',
-              outline: 'none',
-              opacity: disabled || isLoading ? 0.5 : 1,
-              boxSizing: 'border-box',
-              transition: 'border-color 0.2s ease',
-            }}
-            aria-invalid={!!validation.errorMessage && touched}
-            aria-describedby={validation.errorMessage ? 'bet-error' : undefined}
+            placeholder={`Min: ${minBet}`}
+            className={`w-full bg-black/40 text-white text-lg font-bold rounded-xl px-4 py-3 pr-16 border-2 outline-none transition-all duration-200 ${validation.errorMessage && touched ? 'border-red-500/50 focus:border-red-500 focus:shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'border-zinc-700 focus:border-flow-green focus:shadow-[0_0_15px_rgba(0,239,139,0.15)] group-hover:border-zinc-600'} disabled:opacity-50`}
           />
-          <span
-            style={{
-              position: 'absolute',
-              right: 'clamp(14px, 2vw, 16px)',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: FLOW_GREEN,
-              fontSize: 'clamp(12px, 2vw, 14px)',
-              fontWeight: '700',
-            }}
-          >
-            FLOW
-          </span>
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-500 cursor-default">FLOW</span>
         </div>
-        {/* Validation Error */}
-        {validation.errorMessage && touched && (
-          <p
-            id="bet-error"
-            role="alert"
-            style={{
-              color: '#ff6b6b',
-              fontSize: 'clamp(10px, 1.5vw, 11px)',
-              marginTop: '6px',
-              marginBottom: 0,
-            }}
-          >
-            {validation.errorMessage}
-          </p>
-        )}
-        {/* Min/Max Info */}
-        <p
-          style={{
-            color: 'var(--foreground-secondary)',
-            fontSize: 'clamp(10px, 1.5vw, 11px)',
-            marginTop: '8px',
-            marginBottom: 0,
-            wordBreak: 'break-word',
-          }}
-        >
-          Balance: {balance.toFixed(4)} FLOW • Min: {minBet} • Max: {maxBet}
-        </p>
+        <div className="mt-2 h-5 flex items-center justify-between text-xs">
+          {validation.errorMessage && touched ? <span className="text-red-400 font-medium animate-slide-up">{validation.errorMessage}</span> : <span className="text-zinc-500">Balance: {balance.toFixed(2)} FLOW</span>}
+        </div>
       </div>
 
-      {/* Potential Payout */}
-      {potentialPayout > 0 && (
-        <div
-          className="potential-payout"
-          style={{
-            background: `linear-gradient(135deg, rgba(0, 239, 139, 0.15) 0%, rgba(0, 239, 139, 0.05) 100%)`,
-            borderRadius: '10px',
-            padding: 'clamp(12px, 1.8vw, 14px) clamp(14px, 2vw, 16px)',
-            marginBottom: 'clamp(18px, 2.5vw, 22px)',
-            border: `1px solid ${FLOW_GREEN}`,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: '12px',
-          }}
-        >
-          <div>
-            <span style={{ color: 'var(--foreground-secondary)', fontSize: 'clamp(11px, 1.8vw, 12px)', display: 'block' }}>
-              Potential Win
-            </span>
-            <span style={{ color: 'var(--foreground)', fontSize: 'clamp(12px, 2vw, 13px)', fontWeight: '600' }}>
-              {PAYOUT_MULTIPLIER}x Multiplier
-            </span>
-          </div>
-          <span
-            style={{
-              color: FLOW_GREEN,
-              fontSize: 'clamp(18px, 3vw, 22px)',
-              fontWeight: '700',
-            }}
-          >
-            {potentialPayout.toFixed(2)} FLOW
-          </span>
+      <div className={`bg-gradient-to-r from-flow-green/10 to-transparent border-l-2 border-flow-green p-3 rounded-r-lg mb-6 transform transition-all duration-300 overflow-hidden ${(potentialPayout > 0) ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0 h-0 p-0 mb-0'}`}>
+        <div className="flex justify-between items-center">
+          <span className="text-xs text-zinc-400 uppercase tracking-widest font-semibold">Potential Win</span>
+          <span className="text-xl font-bold text-flow-green drop-shadow-[0_0_8px_rgba(0,239,139,0.5)]">+{potentialPayout.toFixed(2)} FLOW</span>
         </div>
-      )}
+      </div>
 
-      {/* Place Bet Button */}
       <button
         onClick={handlePlaceBet}
         disabled={!canPlaceBet}
-        className="place-bet-button"
-        style={{
-          width: '100%',
-          padding: 'clamp(13px, 2.2vw, 16px)',
-          borderRadius: '8px',
-          border: 'none',
-          background: canPlaceBet 
-            ? FLOW_GREEN
-            : 'var(--border-default)',
-          color: canPlaceBet ? '#000000' : 'var(--foreground-muted)',
-          fontSize: 'clamp(14px, 2.5vw, 16px)',
-          fontWeight: '700',
-          cursor: canPlaceBet ? 'pointer' : 'not-allowed',
-          transition: 'all 0.2s ease',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          boxShadow: canPlaceBet ? `0 4px 12px rgba(0, 239, 139, 0.3)` : 'none',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-        }}
-        aria-disabled={!canPlaceBet}
+        className={`w-full py-4 rounded-xl font-bold text-lg uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-3 relative overflow-hidden group ${canPlaceBet ? 'bg-flow-green text-black hover:bg-flow-green-hover shadow-[0_4px_20px_rgba(0,239,139,0.3)] hover:shadow-[0_6px_25px_rgba(0,239,139,0.4)] hover:-translate-y-0.5' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-t-zinc-700'}`}
       >
-        {isLoading && (
-          <span
-            className="loading-spinner"
-            style={{
-              width: '16px',
-              height: '16px',
-              border: '2px solid #000000',
-              borderTopColor: 'transparent',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-            }}
-            aria-hidden="true"
-          />
-        )}
-        {isLoading ? 'Processing...' : 'Place Bet'}
+        {isLoading && <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />}
+        <span className="relative z-10">{isLoading ? 'Processing...' : 'Place Bet'}</span>
+        {canPlaceBet && <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />}
       </button>
 
-      {/* Transaction Error with Retry */}
       {transactionError && (
-        <div
-          className="transaction-error"
-          role="alert"
-          style={{
-            backgroundColor: 'rgba(255, 107, 107, 0.1)',
-            border: '1px solid #ff6b6b',
-            borderRadius: '8px',
-            padding: 'clamp(10px, 1.5vw, 12px) clamp(12px, 2vw, 16px)',
-            marginTop: 'clamp(12px, 2vw, 16px)',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 'clamp(8px, 1.5vw, 12px)',
-            }}
-          >
-            <span
-              style={{
-                color: '#ff6b6b',
-                fontSize: 'clamp(14px, 2.5vw, 18px)',
-                lineHeight: '1',
-              }}
-              aria-hidden="true"
-            >
-              ⚠️
+        <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/30 animate-scale-in">
+          <div className="flex items-start gap-3">
+            <span className="text-xl text-red-500">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+              </svg>
             </span>
-            <div style={{ flex: 1 }}>
-              <p
-                style={{
-                  color: '#ff6b6b',
-                  fontSize: 'clamp(12px, 2vw, 14px)',
-                  fontWeight: '500',
-                  margin: 0,
-                  marginBottom: '8px',
-                }}
-              >
-                Transaction Failed
-              </p>
-              <p
-                style={{
-                  color: '#ffffff',
-                  fontSize: 'clamp(11px, 1.8vw, 13px)',
-                  margin: 0,
-                  marginBottom: 'clamp(8px, 1.5vw, 12px)',
-                  opacity: 0.9,
-                  wordBreak: 'break-word',
-                }}
-              >
-                {transactionError}
-              </p>
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '8px',
-                  flexWrap: 'wrap',
-                }}
-              >
-                <button
-                  onClick={handleRetry}
-                  disabled={isLoading || !selectedPrediction || parsedAmount <= 0 || !validation.valid}
-                  className="retry-button"
-                  style={{
-                    padding: 'clamp(6px, 1vw, 8px) clamp(12px, 2vw, 16px)',
-                    borderRadius: '6px',
-                    border: 'none',
-                    backgroundColor: FLOW_GREEN,
-                    color: '#000000',
-                    fontSize: 'clamp(11px, 1.8vw, 13px)',
-                    fontWeight: '600',
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
-                    opacity: isLoading ? 0.5 : 1,
-                    transition: 'opacity 0.2s ease',
-                  }}
-                >
-                  Retry
-                </button>
-
-                {/* Reset Game Button for Stuck Games */}
-                {transactionError && transactionError.includes('already in progress') && onResetGame && (
-                  <button
-                    onClick={() => {
-                      onResetGame();
-                      if (onClearError) onClearError();
-                    }}
-                    className="reset-button"
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      border: '1px solid #ff6b6b',
-                      backgroundColor: 'rgba(255, 107, 107, 0.1)',
-                      color: '#ff6b6b',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      cursor: isLoading ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.2s ease',
-                    }}
-                  >
-                    Reset Game
-                  </button>
+            <div className="flex-1">
+              <h4 className="text-sm font-bold text-red-400">Transaction Failed</h4>
+              <p className="text-xs text-zinc-300 mt-1 mb-3">{transactionError}</p>
+              <div className="flex gap-2">
+                <button onClick={handleRetry} className="px-3 py-1.5 bg-red-500/20 text-red-300 text-xs font-bold rounded hover:bg-red-500/30 transition-colors">Retry</button>
+                {transactionError.includes('already in progress') && onResetGame && (
+                  <button onClick={() => { onResetGame(); if (onClearError) onClearError(); }} className="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-xs font-bold rounded hover:bg-zinc-700 transition-colors border border-zinc-600">Reset Game</button>
                 )}
-
-                <button
-                  onClick={handleDismissError}
-                  className="dismiss-button"
-                  style={{
-                    padding: 'clamp(6px, 1vw, 8px) clamp(12px, 2vw, 16px)',
-                    borderRadius: '6px',
-                    border: '1px solid #666666',
-                    backgroundColor: 'transparent',
-                    color: '#ffffff',
-                    fontSize: 'clamp(11px, 1.8vw, 13px)',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'border-color 0.2s ease',
-                  }}
-                >
-                  Dismiss
-                </button>
+                <button onClick={handleDismissError} className="px-3 py-1.5 text-zinc-500 text-xs font-bold hover:text-zinc-300 transition-colors ml-auto">Dismiss</button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Disabled Message */}
       {disabled && (
-        <p
-          style={{
-            color: '#ff6b6b',
-            fontSize: 'clamp(11px, 1.8vw, 12px)',
-            textAlign: 'center',
-            marginTop: 'clamp(12px, 2vw, 14px)',
-            marginBottom: 0,
-            padding: '8px',
-            backgroundColor: 'rgba(255, 107, 107, 0.1)',
-            borderRadius: '6px',
-            border: '1px solid rgba(255, 107, 107, 0.3)',
-          }}
-        >
-          Connect your wallet to start betting
-        </p>
+        <div className="mt-4 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 text-center">
+          <p className="text-xs text-orange-400 font-medium">Connect wallet to start playing</p>
+        </div>
       )}
-
-      {/* CSS for spinner animation and hover effects */}
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .prediction-button:hover:not(:disabled):not([data-selected="true"]) {
-          border-color: ${FLOW_GREEN} !important;
-          background-color: rgba(0, 239, 139, 0.05) !important;
-        }
-        .bet-amount-input:focus {
-          border-color: ${FLOW_GREEN} !important;
-          box-shadow: 0 0 0 3px rgba(0, 239, 139, 0.1) !important;
-        }
-        .place-bet-button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(0, 239, 139, 0.5) !important;
-        }
-        .place-bet-button:active:not(:disabled) {
-          transform: translateY(0);
-        }
-        .max-bet-button:hover:not(:disabled) {
-          background-color: rgba(0, 239, 139, 0.2) !important;
-        }
-      `}</style>
     </div>
   );
 }

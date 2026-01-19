@@ -3,76 +3,25 @@
 import { useState, useEffect } from 'react';
 import { useWallet } from '../hooks/useWallet';
 
-/**
- * Props for the WalletButton component
- */
 export interface WalletButtonProps {
-  /** Callback when wallet connects successfully */
   onConnect?: () => void;
-  /** Callback when wallet disconnects */
   onDisconnect?: () => void;
-  /** Connected wallet address (optional, uses hook if not provided) */
   address?: string | null;
-  /** Wallet FLOW balance (optional) */
   balance?: number | null;
-  /** Error message to display (optional, uses hook if not provided) */
   error?: string | null;
-  /** Whether the wallet is connecting (optional, uses hook if not provided) */
   isConnecting?: boolean;
 }
 
-/**
- * Flow green color used throughout the component
- */
-const FLOW_GREEN = '#00EF8B';
-
-/**
- * Error red color for error states
- */
-const ERROR_RED = '#ff6b6b';
-
-/**
- * Truncates a Flow address for display
- * Example: 0x1234567890abcdef -> 0x1234...cdef
- */
 export function truncateAddress(address: string): string {
   if (!address || address.length <= 10) return address;
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-/**
- * Formats a FLOW balance for display
- * Shows up to 4 decimal places
- */
 export function formatBalance(balance: number | null): string {
   if (balance === null || balance === undefined) return '0.0000';
   return balance.toFixed(4);
 }
 
-/**
- * WalletButton component for Flow wallet connection
- * 
- * Displays a connect button when disconnected, and shows the
- * wallet address and balance when connected with a disconnect option.
- * 
- * Features:
- * - Loading state during connection
- * - Error display with retry button
- * - Auto-dismiss errors after 5 seconds
- * 
- * Uses Flow's green color scheme (#00EF8B) for styling.
- * 
- * @example
- * ```tsx
- * <WalletButton 
- *   onConnect={() => console.log('Connected!')}
- *   onDisconnect={() => console.log('Disconnected!')}
- *   balance={10.5}
- * />
- * ```
- * 
- * Requirements: 1.4
- */
 export function WalletButton({
   onConnect,
   onDisconnect,
@@ -82,17 +31,14 @@ export function WalletButton({
   isConnecting: propIsConnecting,
 }: WalletButtonProps) {
   const [showDropdown, setShowDropdown] = useState(false);
-  
-  // Use useWallet hook for authentication with error handling
+
   const wallet = useWallet();
-  
-  // Use prop values if provided, otherwise use hook values
+
   const address = propAddress !== undefined ? propAddress : wallet.address;
   const error = propError !== undefined ? propError : wallet.error;
   const isConnecting = propIsConnecting !== undefined ? propIsConnecting : wallet.isConnecting;
   const isConnected = !!address;
 
-  // Auto-dismiss error after 5 seconds
   useEffect(() => {
     if (error && propError === undefined) {
       const timer = setTimeout(() => {
@@ -128,53 +74,15 @@ export function WalletButton({
     setShowDropdown(!showDropdown);
   };
 
-  // Error state - show error message with retry button
+  // Error state
   if (error && !isConnected) {
     return (
-      <div
-        className="wallet-button-error-container"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '8px',
-        }}
-      >
-        <div
-          className="wallet-error-message"
-          role="alert"
-          style={{
-            backgroundColor: 'rgba(255, 107, 107, 0.1)',
-            border: `1px solid ${ERROR_RED}`,
-            borderRadius: '8px',
-            padding: '12px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            maxWidth: '300px',
-          }}
-        >
-          <span
-            style={{
-              color: ERROR_RED,
-              fontSize: '14px',
-              flex: 1,
-            }}
-          >
-            {error}
-          </span>
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-3 bg-red-500/10 border border-red-500 rounded-lg px-4 py-2 max-w-xs transition-all hover:bg-red-500/20">
+          <span className="text-red-500 text-sm font-medium flex-1">{error}</span>
           <button
             onClick={handleDismissError}
-            className="error-dismiss-button"
-            style={{
-              backgroundColor: 'transparent',
-              border: 'none',
-              color: ERROR_RED,
-              cursor: 'pointer',
-              padding: '4px',
-              fontSize: '16px',
-              lineHeight: 1,
-            }}
+            className="text-red-500 hover:text-red-400 p-1 rounded-md transition-colors"
             aria-label="Dismiss error"
           >
             ×
@@ -183,204 +91,73 @@ export function WalletButton({
         <button
           onClick={handleRetry}
           disabled={isConnecting}
-          className="wallet-button wallet-button--retry"
-          style={{
-            backgroundColor: FLOW_GREEN,
-            color: '#000000',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '12px 24px',
-            fontSize: '16px',
-            fontWeight: '600',
-            cursor: isConnecting ? 'not-allowed' : 'pointer',
-            opacity: isConnecting ? 0.7 : 1,
-            transition: 'opacity 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            if (!isConnecting) {
-              e.currentTarget.style.opacity = '0.9';
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = isConnecting ? '0.7' : '1';
-          }}
-          aria-label="Retry wallet connection"
+          className="bg-flow-green text-black px-6 py-2 rounded-lg font-bold hover:bg-flow-green-hover disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-flow-green/25"
         >
-          {isConnecting ? 'Connecting...' : 'Retry Connection'}
+          {isConnecting ? 'Connecting...' : 'Retry'}
         </button>
       </div>
     );
   }
 
-  // Disconnected state - show connect button with loading state
+  // Disconnected state
   if (!isConnected) {
     return (
       <button
         onClick={handleConnect}
         disabled={isConnecting}
-        className="wallet-button wallet-button--connect"
-        style={{
-          backgroundColor: FLOW_GREEN,
-          color: '#000000',
-          border: 'none',
-          borderRadius: '8px',
-          padding: '12px 24px',
-          fontSize: '16px',
-          fontWeight: '600',
-          cursor: isConnecting ? 'not-allowed' : 'pointer',
-          opacity: isConnecting ? 0.7 : 1,
-          transition: 'opacity 0.2s ease',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-        }}
-        onMouseEnter={(e) => {
-          if (!isConnecting) {
-            e.currentTarget.style.opacity = '0.9';
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.opacity = isConnecting ? '0.7' : '1';
-        }}
-        aria-label={isConnecting ? 'Connecting wallet' : 'Connect wallet'}
-        aria-busy={isConnecting}
+        className="group relative overflow-hidden bg-flow-green text-black px-6 py-2.5 rounded-lg font-bold hover:bg-flow-green-hover disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-[0_0_15px_rgba(0,239,139,0.3)] hover:shadow-[0_0_25px_rgba(0,239,139,0.5)] active:scale-95"
       >
-        {isConnecting && (
-          <span
-            className="loading-spinner"
-            style={{
-              width: '16px',
-              height: '16px',
-              border: '2px solid #000000',
-              borderTopColor: 'transparent',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-            }}
-            aria-hidden="true"
-          />
-        )}
-        {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+        <span className="relative z-10 flex items-center gap-2">
+          {isConnecting && (
+            <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          )}
+          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+        </span>
       </button>
     );
   }
 
-  // Connected state - show address, balance, and disconnect option
+  // Connected state
   return (
-    <div 
-      className="wallet-button-container"
-      style={{ position: 'relative', display: 'inline-block' }}
-    >
+    <div className="relative inline-block text-left">
       <button
         onClick={toggleDropdown}
-        className="wallet-button wallet-button--connected"
-        style={{
-          backgroundColor: 'transparent',
-          color: FLOW_GREEN,
-          border: `2px solid ${FLOW_GREEN}`,
-          borderRadius: '8px',
-          padding: '10px 16px',
-          fontSize: '14px',
-          fontWeight: '500',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          transition: 'background-color 0.2s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(0, 239, 139, 0.1)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }}
-        aria-expanded={showDropdown}
-        aria-haspopup="true"
-        aria-label={`Wallet ${truncateAddress(address)}`}
+        className={`
+          flex items-center gap-3 px-4 py-2 rounded-lg
+          bg-zinc-900 border transition-all duration-200
+          ${showDropdown
+            ? 'border-flow-green shadow-[0_0_10px_rgba(0,239,139,0.2)]'
+            : 'border-zinc-700 hover:border-flow-green/50 hover:bg-zinc-800'
+          }
+        `}
       >
-        <span 
-          className="network-indicator"
-          style={{ 
-            color: '#ffa500',
-            fontSize: '10px',
-            fontWeight: '700',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-          }}
-        >
+        <span className="text-[10px] font-bold text-amber-500 tracking-wider bg-amber-500/10 px-1.5 py-0.5 rounded">
           TESTNET
         </span>
-        <span 
-          className="wallet-address"
-          style={{ fontFamily: 'monospace' }}
-        >
+        <span className="font-mono text-zinc-300 text-sm">
           {truncateAddress(address)}
         </span>
-        <span 
-          className="wallet-balance"
-          style={{ 
-            color: '#ffffff',
-            backgroundColor: FLOW_GREEN,
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: '600',
-          }}
-        >
+        <div className="px-2 py-0.5 bg-flow-green text-black text-xs font-bold rounded">
           {formatBalance(balance ?? null)} FLOW
-        </span>
-        <span 
-          className="dropdown-arrow"
-          style={{
-            marginLeft: '4px',
-            transition: 'transform 0.2s ease',
-            transform: showDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
-          }}
+        </div>
+        <svg
+          className={`w-3 h-3 text-zinc-400 transition-transform ${showDropdown ? 'rotate-180' : ''}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor"
         >
-          ▼
-        </span>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
       </button>
 
       {showDropdown && (
-        <div
-          className="wallet-dropdown"
-          style={{
-            position: 'absolute',
-            top: '100%',
-            right: '0',
-            marginTop: '8px',
-            backgroundColor: '#1a1a1a',
-            border: `1px solid ${FLOW_GREEN}`,
-            borderRadius: '8px',
-            overflow: 'hidden',
-            minWidth: '160px',
-            zIndex: 1000,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-          }}
-        >
+        <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl py-1 z-50 animate-scale-in origin-top-right overflow-hidden">
           <button
             onClick={handleDisconnect}
-            className="disconnect-button"
-            style={{
-              width: '100%',
-              backgroundColor: 'transparent',
-              color: '#ff6b6b',
-              border: 'none',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              textAlign: 'left',
-              transition: 'background-color 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 107, 107, 0.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-            aria-label="Disconnect wallet"
+            className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2 font-medium"
           >
-            Disconnect
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Disconnect Wallet
           </button>
         </div>
       )}

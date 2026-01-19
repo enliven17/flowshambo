@@ -1,16 +1,18 @@
-"use client";
+'use client';
 
 /**
  * FlickeringGrid Component
  * 
  * A canvas-based animated grid background with flickering squares.
- * Adapted from FlowSwap project for FlowShambo.
+ * Creates a "living" technological background effect suitable for the Cyberpunk theme.
  * 
  * Features:
- * - Performance optimized with requestAnimationFrame
- * - Responsive to container size changes
- * - Only animates when in viewport (IntersectionObserver)
+ * - Performance optimized with requestAnimationFrame and IntersectionObserver
+ * - Responsive to container size changes using ResizeObserver
  * - Configurable colors, opacity, and flicker rate
+ * - devicePixelRatio support for crisp rendering on high-DPI screens
+ * 
+ * @module components/FlickeringGrid
  */
 
 import React, {
@@ -19,27 +21,41 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from "react";
+} from 'react';
 
-interface FlickeringGridProps extends React.HTMLAttributes<HTMLDivElement> {
+/**
+ * Props for the FlickeringGrid component
+ */
+export interface FlickeringGridProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Size of each grid square in pixels */
   squareSize?: number;
+  /** Gap between grid squares in pixels */
   gridGap?: number;
+  /** Probability of a square flickering per second */
   flickerChance?: number;
+  /** Color of the squares (hex or rgb) */
   color?: string;
+  /** Fixed width (defaults to container width if undefined) */
   width?: number;
+  /** Fixed height (defaults to container height if undefined) */
   height?: number;
-  className?: string;
+  /** Maximum opacity of the squares (0-1) */
   maxOpacity?: number;
 }
+
+/**
+ * Flow Green default color
+ */
+const DEFAULT_COLOR = '#00EF8B';
 
 export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
   squareSize = 4,
   gridGap = 6,
   flickerChance = 0.3,
-  color = "rgb(0, 239, 139)", // Flow green
+  color = DEFAULT_COLOR,
   width,
   height,
-  className = "",
+  className = '',
   maxOpacity = 0.3,
   ...props
 }) => {
@@ -50,32 +66,40 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
 
   // Convert color to RGBA format for opacity control
   const memoizedColor = useMemo(() => {
-    const toRGBA = (color: string) => {
-      if (typeof window === "undefined") {
-        return `rgba(0, 239, 139,`; // Flow green fallback
+    const toRGBA = (colorString: string) => {
+      if (typeof window === 'undefined') {
+        return 'rgba(0, 239, 139,';
       }
-      const canvas = document.createElement("canvas");
-      canvas.width = canvas.height = 1;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return "rgba(0, 239, 139,";
-      ctx.fillStyle = color;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) return 'rgba(0, 239, 139,';
+
+      ctx.fillStyle = colorString;
       ctx.fillRect(0, 0, 1, 1);
       const [r, g, b] = Array.from(ctx.getImageData(0, 0, 1, 1).data);
       return `rgba(${r}, ${g}, ${b},`;
     };
+
     return toRGBA(color);
   }, [color]);
 
-  // Setup canvas with device pixel ratio for crisp rendering
+  /**
+   * Setup canvas buffer with correct dimensions and DPR
+   */
   const setupCanvas = useCallback(
-    (canvas: HTMLCanvasElement, width: number, height: number) => {
+    (canvas: HTMLCanvasElement, w: number, h: number) => {
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-      const cols = Math.floor(width / (squareSize + gridGap));
-      const rows = Math.floor(height / (squareSize + gridGap));
+      // Set actual canvas size (resolution)
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+
+      // Calculate layout
+      const cols = Math.floor(w / (squareSize + gridGap));
+      const rows = Math.floor(h / (squareSize + gridGap));
 
       // Initialize squares with random opacity
       const squares = new Float32Array(cols * rows);
@@ -88,10 +112,13 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
     [squareSize, gridGap, maxOpacity],
   );
 
-  // Update square opacities based on flicker chance
+  /**
+   * Update square opacities based on time delta
+   */
   const updateSquares = useCallback(
     (squares: Float32Array, deltaTime: number) => {
       for (let i = 0; i < squares.length; i++) {
+        // Randomly change opacity based on chance
         if (Math.random() < flickerChance * deltaTime) {
           squares[i] = Math.random() * maxOpacity;
         }
@@ -100,21 +127,25 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
     [flickerChance, maxOpacity],
   );
 
-  // Draw the grid on canvas
+  /**
+   * Render the grid to the canvas
+   */
   const drawGrid = useCallback(
     (
       ctx: CanvasRenderingContext2D,
-      width: number,
-      height: number,
+      w: number,
+      h: number,
       cols: number,
       rows: number,
       squares: Float32Array,
       dpr: number,
     ) => {
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = "transparent";
-      ctx.fillRect(0, 0, width, height);
+      // Clear canvas
+      ctx.clearRect(0, 0, w, h);
 
+      // We don't fill background to keep it transparent
+
+      // Draw squares
       for (let i = 0; i < cols; i++) {
         for (let j = 0; j < rows; j++) {
           const opacity = squares[i * rows + j];
@@ -131,13 +162,13 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
     [memoizedColor, squareSize, gridGap],
   );
 
-  // Main animation loop and lifecycle management
+  // Main animation effect
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     let animationFrameId: number;
@@ -150,7 +181,7 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
       gridParams = setupCanvas(canvas, newWidth, newHeight);
     };
 
-    updateCanvasSize();
+    updateCanvasSize(); // Initial setup
 
     let lastTime = 0;
     const animate = (time: number) => {
@@ -159,34 +190,41 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
       const deltaTime = (time - lastTime) / 1000;
       lastTime = time;
 
-      updateSquares(gridParams.squares, deltaTime);
-      drawGrid(
-        ctx,
-        canvas.width,
-        canvas.height,
-        gridParams.cols,
-        gridParams.rows,
-        gridParams.squares,
-        gridParams.dpr,
-      );
+      // Limit delta time to avoid large jumps if tab was inactive
+      const clampedDelta = Math.min(deltaTime, 0.1);
+
+      if (gridParams) {
+        updateSquares(gridParams.squares, clampedDelta);
+        drawGrid(
+          ctx,
+          canvas.width,
+          canvas.height,
+          gridParams.cols,
+          gridParams.rows,
+          gridParams.squares,
+          gridParams.dpr,
+        );
+      }
+
       animationFrameId = requestAnimationFrame(animate);
     };
 
-    // Observe container size changes
+    // Observers
     const resizeObserver = new ResizeObserver(() => {
       updateCanvasSize();
     });
-
     resizeObserver.observe(container);
 
-    // Only animate when in viewport
     const intersectionObserver = new IntersectionObserver(
       ([entry]) => {
-        setIsInView(entry!.isIntersecting);
+        setIsInView(entry.isIntersecting);
+        // Reset lastTime when coming back into view to avoid huge jump
+        if (entry.isIntersecting) {
+          lastTime = performance.now();
+        }
       },
       { threshold: 0 },
     );
-
     intersectionObserver.observe(canvas);
 
     if (isInView) {
@@ -203,12 +241,13 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`h-full w-full ${className}`}
+      className={`relative w-full h-full overflow-hidden ${className}`}
       {...props}
+      data-testid="flickering-grid"
     >
       <canvas
         ref={canvasRef}
-        className="pointer-events-none"
+        className="pointer-events-none absolute inset-0 block"
         style={{
           width: canvasSize.width,
           height: canvasSize.height,
@@ -217,3 +256,5 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
     </div>
   );
 };
+
+export default FlickeringGrid;

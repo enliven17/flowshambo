@@ -52,6 +52,12 @@ export interface GameState {
   winner: ObjectType | null;
   /** Whether the player won the bet */
   playerWon: boolean | null;
+  /** Bet transaction ID */
+  betTransactionId: string | null;
+  /** Reveal transaction ID */
+  revealTransactionId: string | null;
+  /** Settlement transaction ID */
+  settleTransactionId: string | null;
 }
 
 /**
